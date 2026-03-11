@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ez a fájl útmutatást nyújt a Claude Code (claude.ai/code) számára, amikor ezzel a repository-val dolgozik.
 
-## Project Context
+## Projektről
 
-This is a university independent laboratory project (Önlab) for the 6th semester. The project is configured with PyCharm (`.idea/`) as the primary IDE, indicating a Python-based project.
+Ez egy egyetemi önálló laboratóriumi projekt (Önlab) a 6. félévre. A projekt PyCharm-mal van konfigurálva (`.idea/`), tehát Python-alapú.
 
-The project has no source code yet — build commands, test instructions, and architecture notes should be added here as the project is developed.
+A projektnek még nincs forráskódja — a build parancsokat, tesztelési utasításokat és architektúra megjegyzéseket ide kell felvenni, ahogy a projekt fejlődik.
 
-## Git Conventions
+## Git konvenciók
 
-Always commit changes with clean and readable commit messages.
+A változtatásokat mindig tiszta és olvasható commit üzenetekkel kell commitolni.

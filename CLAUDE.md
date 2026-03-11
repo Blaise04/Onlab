@@ -8,6 +8,11 @@ Ez egy egyetemi önálló laboratóriumi projekt (Önlab) a 6. félévre. A proj
 
 A projektnek még nincs forráskódja — a build parancsokat, tesztelési utasításokat és architektúra megjegyzéseket ide kell felvenni, ahogy a projekt fejlődik.
 
+### Könyvtárstruktúra
+
+- `docs/` – kutatási dokumentumok és tervek
+  - `bs_szintetikus_adatok.md` – Black-Scholes szintetikus adathalmaz paraméterei neurális hálóhoz
+
 ## Git konvenciók
 
 A változtatásokat mindig tiszta és olvasható commit üzenetekkel kell commitolni.

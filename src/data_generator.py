@@ -14,15 +14,15 @@ from src.black_scholes import (
 )
 
 DEFAULT_PARAMS = {
-    'S':     (10.0,  150.0),
-    'K':     (7.0,   650.0),
-    'T':     (0.005,   2.0),
-    'r':     (0.00,   0.05),
-    'sigma': (0.05,   0.90),
-    'q':     (0.00,   0.03),
+    'S':         (10.0, 150.0),
+    'moneyness': (0.7,    1.3),
+    'T':         (0.005,  2.0),
+    'r':         (0.00,  0.05),
+    'sigma':     (0.05,  0.90),
+    'q':         (0.00,  0.03),
 }
 
-PARAM_NAMES = ['S', 'K', 'T', 'r', 'sigma', 'q']
+PARAM_NAMES = ['S', 'moneyness', 'T', 'r', 'sigma', 'q']
 
 
 def _sample_uniform(n: int, rng: np.random.Generator) -> np.ndarray:
@@ -90,7 +90,8 @@ def generate_dataset(
     else:
         raise ValueError(f"Ismeretlen mintavételezési módszer: '{method}'. Válasszon: uniform, lhs, grid")
 
-    S, K, T, r, sigma, q = (samples[:, i] for i in range(len(PARAM_NAMES)))
+    S, moneyness, T, r, sigma, q = (samples[:, i] for i in range(len(PARAM_NAMES)))
+    K = S / moneyness
 
     call_price = bs_call(S, K, T, r, sigma, q)
     put_price  = bs_put(S, K, T, r, sigma, q)
@@ -102,6 +103,7 @@ def generate_dataset(
         put_price  = np.maximum(put_price,  0.0)
 
     data = {
+        'moneyness': moneyness,
         'S': S, 'K': K, 'T': T, 'r': r, 'sigma': sigma, 'q': q,
         'call_price': call_price,
         'put_price':  put_price,
@@ -115,7 +117,6 @@ def generate_dataset(
         data['rho']   = bs_rho(S, K, T, r, sigma, q)
 
     if normalize:
-        data['moneyness']       = S / K
         data['call_price_norm'] = call_price / K
 
     df = pd.DataFrame(data)
@@ -126,6 +127,7 @@ def save_dataset(
     df: pd.DataFrame,
     output_path: str,
     format: str = 'csv',
+    seed: int = 42,
 ) -> None:
     """Adathalmaz mentése train/val/test szétválasztással (70/15/15%).
 
@@ -134,10 +136,11 @@ def save_dataset(
     df          : a teljes adathalmaz DataFrame
     output_path : kimeneti mappa
     format      : 'csv' vagy 'parquet'
+    seed        : véletlenszám mag a shuffle-höz
     """
     os.makedirs(output_path, exist_ok=True)
 
-    df = df.sample(frac=1, random_state=0).reset_index(drop=True)
+    df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
     n = len(df)
     n_train = int(0.70 * n)
     n_val   = int(0.15 * n)

@@ -154,17 +154,22 @@ Minden bemeneti paramétert [0, 1] vagy [-1, 1] intervallumra normalizálni (min
 
 Az alábbi beállítás kiindulópontként ajánlott:
 
-| Paraméter | Tartomány | Eloszlás |
-|---|---|---|
-| S/K (moneyness) | [0.7, 1.3] | Uniform |
-| T | [0.05, 2.0] év | Uniform |
-| r | [0.00, 0.05] | Uniform |
-| σ | [0.10, 0.60] | Uniform |
-| **Kimenet: C/K** | BS-képlettel számítva | — |
+| Paraméter | Tartomány | Típus | Eloszlás |
+|---|---|---|---|
+| S | [10, 150] | mintavételezett | Uniform |
+| moneyness (S/K) | [0.7, 1.3] | mintavételezett | Uniform |
+| K | — | levezetett: K = S / moneyness | — |
+| T | [0.005, 2.0] év | mintavételezett | Uniform |
+| r | [0.00, 0.05] | mintavételezett | Uniform |
+| σ | [0.05, 0.90] | mintavételezett | Uniform |
+| q | [0.00, 0.03] | mintavételezett | Uniform |
+| **Kimenet: C, P** | BS-képlettel számítva | — | — |
+
+**Megjegyzés a K generáláshoz:** S és moneyness mintavételezésével, majd K = S / moneyness levezetésével garantálható, hogy minden minta realisztikus moneyness tartományban legyen. A K közvetlen mintavételezése S-től függetlenül sok irreális mélyen OTM/ITM kombinációt eredményezne.
 
 - **Adathalmaz mérete:** 100 000 – 500 000 megfigyelés
 - **Mintavételezés:** Latin Hypercube Sampling (LHS)
-- **Normalizáció:** moneyness (S/K) + kimenet K-val osztva
+- **Normalizáció:** moneyness alapból jelen van + kimenet K-val osztva (`--normalize`)
 - **Train/val/test:** 70% / 15% / 15%
 
 ---

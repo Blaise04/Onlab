@@ -64,7 +64,7 @@ def main():
     print()
 
     print(f"Mentés: {args.output} ({args.format})")
-    save_dataset(df, output_path=args.output, format=args.format)
+    save_dataset(df, output_path=args.output, format=args.format, seed=args.seed)
 
     print()
     print("Sanity check (ATM: S=K=100, T=1, r=0.05, sigma=0.2):")

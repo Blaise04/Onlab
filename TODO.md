@@ -12,6 +12,12 @@ Az implementált javaslatok kerüljenek ki ebből a listából.
 | 6 | `train` | `src/train.py` (nem létezik) | [ ] |
 | 7 | `evaluate` | `src/evaluate.py` (nem létezik) | [ ] |
 | 8 | `eda` | `notebooks/eda.ipynb` (nem létezik) | [ ] |
+| 9 | `put-call-validacio` | `src/data_generator.py` | [ ] |
+| 10 | `relativ-hiba-metrika` | `src/evaluate.py` | [ ] |
+| 11 | `baseline-összehasonlitas` | `src/model.py` | [ ] |
+| 12 | `requirements` | `requirements.txt` (nem létezik) | [ ] |
+| 13 | `config` | `config.yaml` (nem létezik) | [ ] |
+| 14 | `pipeline-notebook` | `notebooks/pipeline.ipynb` (nem létezik) | [ ] |
 
 ---
 
@@ -68,3 +74,45 @@ Az implementált javaslatok kerüljenek ki ebből a listából.
 **Fájl:** `notebooks/eda.ipynb` (nem létezik)
 **Probléma:** Az adathalmaz eloszlásáról nincs vizualizáció.
 **Megoldás:** Jupyter notebook: input hisztogramok, call/put ár eloszlás, moneyness vs. call ár scatter.
+
+---
+
+### 9. `put-call-validacio`
+**Fájl:** `src/data_generator.py`
+**Probléma:** A generált adatokon nincs put-call paritás ellenőrzés — néma numerikus hiba esetén hibás adatokkal tanítunk.
+**Megoldás:** Generálás után ellenőrizni, hogy `C - P ≈ S·e^(-qT) - K·e^(-rT)` minden sorra teljesül (tolerancia: 1e-6).
+
+---
+
+### 10. `relativ-hiba-metrika`
+**Fájl:** `src/evaluate.py`
+**Probléma:** MSE/MAE abszolút hibát mér, ami eltorzul a mélyen ITM/OTM opciók esetén.
+**Megoldás:** Relatív hiba: `|pred - BS| / BS` — pénzügyileg relevánsabb metrika, érdemes a fő kiértékelési mérőszámnak választani.
+
+---
+
+### 11. `baseline-összehasonlitas`
+**Fájl:** `src/model.py`
+**Probléma:** Nincs baseline, amihez a modell teljesítményét viszonyítani lehet.
+**Megoldás:** Egy egyszerű sekély MLP (1-2 réteg) baseline-ként, a mélyebb architektúrával összehasonlítva.
+
+---
+
+### 12. `requirements`
+**Fájl:** `requirements.txt` (nem létezik)
+**Probléma:** A projekt függőségei nincsenek rögzítve — másik gépen nem reprodukálható a környezet.
+**Megoldás:** `requirements.txt` létrehozása: `numpy`, `scipy`, `pandas`, `torch`, `pyarrow`, `jupyter`, stb. verzióval.
+
+---
+
+### 13. `config`
+**Fájl:** `config.yaml` (nem létezik)
+**Probléma:** A hiperparaméterek (learning rate, batch size, rétegek száma stb.) szét vannak szórva a kódban.
+**Megoldás:** Központi `config.yaml` fájl, amit a train/evaluate scriptek betöltenek — kód módosítás nélkül kísérletezhető.
+
+---
+
+### 14. `pipeline-notebook`
+**Fájl:** `notebooks/pipeline.ipynb` (nem létezik)
+**Probléma:** A teljes pipeline (generálás → tanítás → kiértékelés) nincs egy helyen bemutatva.
+**Megoldás:** Jupyter notebook, ami végigvezet a teljes folyamaton — prezentációhoz és beadáshoz hasznos.

@@ -7,7 +7,7 @@ Az implementált javaslatok kerüljenek ki ebből a listából.
 | 1 | `seed-fix` | `src/data_generator.py:140` | [x] |
 | 2 | `moneyness-sampling` | `src/data_generator.py` | [x] |
 | 3 | `normalize-teljes` | `src/data_generator.py:117-119` | [x] |
-| 4 | `unit-tesztek` | `tests/` (nem létezik) | [ ] |
+| 4 | `unit-tesztek` | `tests/` (nem létezik) | [x] |
 | 5 | `model` | `src/model.py` (nem létezik) | [ ] |
 | 6 | `train` | `src/train.py` (nem létezik) | [ ] |
 | 7 | `evaluate` | `src/evaluate.py` (nem létezik) | [ ] |

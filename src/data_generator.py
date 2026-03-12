@@ -61,6 +61,7 @@ def generate_dataset(
     method: str = 'lhs',
     include_greeks: bool = False,
     normalize: bool = False,
+    scale_inputs: bool = False,
     noise_std: float = 0.0,
     seed: int = 42,
 ) -> pd.DataFrame:
@@ -71,7 +72,8 @@ def generate_dataset(
     n             : minták száma (grid esetén közelítő)
     method        : 'uniform', 'lhs', vagy 'grid'
     include_greeks: delta, gamma, vega, theta, rho hozzáadása
-    normalize     : moneyness (S/K) és normált call ár (call/K) hozzáadása
+    normalize     : normált call ár (call/K) hozzáadása
+    scale_inputs  : bemeneti paraméterek [0,1]-re skálázása (min-max, _norm oszlopok)
     noise_std     : Gauss-zaj szórása a call/put árhoz (0 = nincs)
     seed          : véletlenszám mag
 
@@ -118,6 +120,11 @@ def generate_dataset(
 
     if normalize:
         data['call_price_norm'] = call_price / K
+
+    if scale_inputs:
+        for param in PARAM_NAMES:
+            low, high = DEFAULT_PARAMS[param]
+            data[f'{param}_norm'] = (data[param] - low) / (high - low)
 
     df = pd.DataFrame(data)
     return df

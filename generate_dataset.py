@@ -27,9 +27,11 @@ def parse_args():
                    help='Kimeneti fájlformátum (default: csv)')
     p.add_argument('--greeks',    action='store_true',
                    help='Görögök (delta, gamma, vega, theta, rho) számítása')
-    p.add_argument('--normalize', action='store_true',
-                   help='Moneyness normalizáció (S/K és call/K hozzáadása)')
-    p.add_argument('--noise',     type=float, default=0.0,
+    p.add_argument('--normalize',    action='store_true',
+                   help='Normált call ár (call/K) hozzáadása')
+    p.add_argument('--scale-inputs', action='store_true',
+                   help='Bemeneti paraméterek [0,1]-re skálázása (_norm oszlopok, min-max)')
+    p.add_argument('--noise',        type=float, default=0.0,
                    help='Gauss-zaj szórása az opció árhoz (default: 0.0)')
     p.add_argument('--seed',      type=int,   default=42,
                    help='Véletlenszám mag (default: 42)')
@@ -44,6 +46,7 @@ def main():
     print(f"  Módszer:       {args.method}")
     print(f"  Görögök:       {args.greeks}")
     print(f"  Normalizáció:  {args.normalize}")
+    print(f"  Input skálázás:{args.scale_inputs}")
     print(f"  Zaj (std):     {args.noise}")
     print(f"  Seed:          {args.seed}")
     print()
@@ -54,6 +57,7 @@ def main():
         method=args.method,
         include_greeks=args.greeks,
         normalize=args.normalize,
+        scale_inputs=args.scale_inputs,
         noise_std=args.noise,
         seed=args.seed,
     )

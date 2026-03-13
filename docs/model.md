@@ -273,13 +273,13 @@ for M in [MLPPricer(), DeepMLPPricer(), ResNetPricer(),
 
 ---
 
-## 8. Kísérleti eredmények
+## 7. Kísérleti eredmények
 
 Az összes modellt azonos feltételek mellett tanítottuk: 700 000 szintetikus Black-Scholes minta
 (LHS-mintavételezés), 150 000-es validációs és teszt halmaz, max 200 epoch, patience=20,
 batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon (150 000 minta).
 
-### 8.1 Összefoglaló táblázat
+### 7.1 Összefoglaló táblázat
 
 | Modell        | Paraméterek |  Best ep | Val MSE (×10⁻⁵) | Test RMSE | Test MAE  |   R²     |
 |---------------|-------------|----------|-----------------|-----------|-----------|----------|
@@ -292,7 +292,7 @@ batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon 
 | finn          |    402 817  |      18  |        5.57     | 0.007502  | 0.005007  | 0.99718  |
 | resnet_phys   |    398 593  |     199  |        1.82     | 0.004291  | 0.002802  | 0.99908  |
 
-### 8.2 Szegmentált eredmények (RMSE)
+### 7.2 Szegmentált eredmények (RMSE)
 
 | Modell       |  OTM (m<0.97) | ATM (0.97–1.03) | ITM (m>1.03) |
 |--------------|---------------|-----------------|--------------|
@@ -307,9 +307,9 @@ batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon 
 
 ---
 
-## 9. Következtetések
+## 8. Következtetések
 
-### 9.1 Általános megállapítások
+### 8.1 Általános megállapítások
 
 **A ResNetPricer (ReLU) bizonyult a legpontosabbnak** (RMSE=0.00425, R²=0.9991), megelőzve
 minden 2. generációs architektúrát. Ez összhangban van Lürig et al. (2023) eredményeivel,
@@ -319,7 +319,7 @@ akik szintén a Pre-LN reziduális MLP-t találták a legstabilabbnak.
 ~11%-kal gyengébb a legjobb modellnél — 13× kevesebb paraméterrel. Ez megerősíti, hogy
 BS szintetikus adatokon az egyszerű architektúra is elegendő lehet.
 
-### 9.2 Miért teljesítenek gyengébben a 2. generációs modellek?
+### 8.2 Miért teljesítenek gyengébben a 2. generációs modellek?
 
 **GELUResNetPricer** (RMSE=0.0070): A GELU aktiváció — várakozásainkkal ellentétben —
 nem javított a ReLU-hoz képest. A BS ár ugyan sima függvény, de az 1M szintetikus mintán
@@ -345,7 +345,7 @@ kellene — csak a háló saját hibáját becsüli.
 teljesít, mint a ResNet. A Dropout (0.1) regularizáló hatása és a LayerNorm megakadályozza
 a modellt az overfit-ben, de skip-kapcsolat nélkül a gradiens-áramlás kevésbé hatékony.
 
-### 9.3 Physics-Informed Loss hatása
+### 8.3 Physics-Informed Loss hatása
 
 A `resnet_phys` (RMSE=0.00429) mindössze ~0.9%-kal gyengébb MSE-ben, mint a sima ResNet
 (RMSE=0.00425), de **garantálja a delta-korlátot**: `∂C_norm/∂moneyness_norm ∈ [0, 1]`.
@@ -359,7 +359,7 @@ Megjegyzés: a resnet_phys OTM szegmensben kicsit gyengébb (0.00417 vs 0.00374 
 ami arra utal, hogy a physics regularizáció kissé eltorzítja az OTM becsléseket — az ár
 közel nulla OTM-nél, de a delta-korlát mégis aktív.
 
-### 9.4 Összefoglalás
+### 8.4 Összefoglalás
 
 | Kategória             | Győztes       | Megjegyzés                                      |
 |-----------------------|---------------|-------------------------------------------------|
@@ -378,7 +378,7 @@ megvizsgálni.
 
 ---
 
-## 7. Irodalmi háttér
+## 9. Irodalmi háttér
 
 - **Culkin & Das (2017)** — *Machine Learning in Finance: The Case of Deep Learning for Option Pricing*.
   Elsők között mutatták meg, hogy egyszerű MLP (4 réteg, 100 neuron) képes közel-BS pontossággal

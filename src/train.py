@@ -137,6 +137,8 @@ def train_model(
     patience: int = 10,
     device: str = 'auto',
     augment_put: bool = False,
+    physics_loss: bool = False,
+    physics_lambda: float = 0.1,
 ) -> dict:
     """
     Betanítja a modellt, checkpoint-ot ment a legjobb validációs loss-nál.
@@ -155,7 +157,9 @@ def train_model(
         weight_decay: L2 regularizáció
         patience    : early stopping türelem (epoch)
         device      : 'auto' | 'cpu' | 'cuda' | 'mps'
-        augment_put : put-call paritással megduplázza az adathalmazt (input_dim=6)
+        augment_put    : put-call paritással megduplázza az adathalmazt (input_dim=6)
+        physics_loss   : physics-informed loss engedélyezése (delta korlát)
+        physics_lambda : physics loss súlya: L = L_MSE + λ·L_delta
 
     Returns:
         history dict: train_loss, val_loss listák + legjobb epoch
@@ -208,6 +212,16 @@ def train_model(
         optimizer, mode='min', factor=0.5, patience=5, min_lr=1e-6
     )
 
+    # Physics-informed loss: moneyness_norm indexe a feature listában
+    moneyness_idx: Optional[int] = None
+    if physics_loss:
+        try:
+            moneyness_idx = (feature_cols or DEFAULT_FEATURE_COLS).index('moneyness_norm')
+        except ValueError:
+            raise ValueError("physics_loss=True, de 'moneyness_norm' nincs a feature_cols-ban.")
+        print(f"Physics-informed loss: bekapcsolva (λ={physics_lambda}, "
+              f"moneyness_idx={moneyness_idx})")
+
     os.makedirs(output_dir, exist_ok=True)
     checkpoint_path = os.path.join(output_dir, f"{model_name}_best.pt")
 
@@ -227,8 +241,23 @@ def train_model(
         train_loss_sum = 0.0
         for X_batch, y_batch in train_loader:
             optimizer.zero_grad()
-            pred = model(X_batch)
-            loss = criterion(pred, y_batch)
+            if physics_loss:
+                # Gradienst számítunk a bemenet szerint → requires_grad szükséges
+                X_phys = X_batch.detach().requires_grad_(True)
+                pred = model(X_phys)
+                mse = criterion(pred, y_batch)
+                # Delta = ∂C_norm/∂moneyness_norm — legyen [0, 1]-ben
+                grads = torch.autograd.grad(
+                    pred.sum(), X_phys, create_graph=True
+                )[0]
+                delta = grads[:, moneyness_idx]
+                phys = physics_lambda * (
+                    torch.relu(-delta) + torch.relu(delta - 1.0)
+                ).mean()
+                loss = mse + phys
+            else:
+                pred = model(X_batch)
+                loss = criterion(pred, y_batch)
             loss.backward()
             optimizer.step()
             train_loss_sum += loss.item() * len(X_batch)

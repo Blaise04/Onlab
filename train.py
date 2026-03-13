@@ -5,6 +5,11 @@ Használat:
     python train.py --model resnet --epochs 200 --output models/
     python train.py --model mlp --hidden-dim 100 --output models/
     python train.py --model deep_mlp --batch-size 4096 --output models/
+    python train.py --model gelu_resnet --epochs 200 --output models/
+    python train.py --model dense_mlp --epochs 200 --output models/
+    python train.py --model highway --epochs 200 --output models/
+    python train.py --model finn --epochs 200 --output models/
+    python train.py --model resnet --physics-loss --physics-lambda 0.1 --epochs 200
 """
 
 import argparse
@@ -23,7 +28,8 @@ def parse_args():
         description='Neurális háló opciós árazó tanítás'
     )
     p.add_argument('--model',        type=str, default='mlp',
-                   choices=['mlp', 'deep_mlp', 'resnet'],
+                   choices=['mlp', 'deep_mlp', 'resnet',
+                            'gelu_resnet', 'dense_mlp', 'highway', 'finn'],
                    help='Modell architektúra (default: mlp)')
     p.add_argument('--train',        type=str, default='data/train.parquet',
                    help='Tanítóhalmaz parquet elérési útja')
@@ -51,6 +57,10 @@ def parse_args():
                    help='Véletlenszám mag (default: 42)')
     p.add_argument('--augment-put',  action='store_true',
                    help='Put-call paritással megduplázza az adathalmazt (input_dim=6)')
+    p.add_argument('--physics-loss', action='store_true',
+                   help='Physics-informed loss: delta korlát (∂C/∂moneyness ∈ [0,1])')
+    p.add_argument('--physics-lambda', type=float, default=0.1,
+                   help='Physics loss súlya λ: L = L_MSE + λ·L_delta (default: 0.1)')
     return p.parse_args()
 
 
@@ -66,16 +76,23 @@ def build_model_kwargs(args) -> dict:
     """Modell kwargs összeállítása az argumentumokból."""
     input_dim = 6 if args.augment_put else 5
     defaults = {
-        'mlp':      {'input_dim': input_dim, 'hidden_dim': 100, 'n_layers': 4},
-        'deep_mlp': {'input_dim': input_dim, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1},
-        'resnet':   {'input_dim': input_dim, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},
+        'mlp':         {'input_dim': input_dim, 'hidden_dim': 100, 'n_layers': 4},
+        'deep_mlp':    {'input_dim': input_dim, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1},
+        'resnet':      {'input_dim': input_dim, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},
+        'gelu_resnet': {'input_dim': input_dim, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},
+        'dense_mlp':   {'input_dim': input_dim, 'hidden_dim': 128, 'n_layers': 4, 'dropout': 0.1},
+        'highway':     {'input_dim': input_dim, 'hidden_dim': 256, 'n_blocks': 4, 'dropout': 0.1},
+        'finn':        {'input_dim': input_dim, 'approx_dim': 64, 'resnet_dim': 256,
+                        'n_blocks': 3, 'dropout': 0.1},
     }
     kwargs = defaults[args.model].copy()
     if args.hidden_dim is not None:
         kwargs['hidden_dim'] = args.hidden_dim
     if args.n_layers is not None:
-        key = 'n_blocks' if args.model == 'resnet' else 'n_layers'
-        kwargs[key] = args.n_layers
+        if args.model in ('resnet', 'gelu_resnet', 'highway', 'finn'):
+            kwargs['n_blocks'] = args.n_layers
+        else:
+            kwargs['n_layers'] = args.n_layers
     return kwargs
 
 
@@ -95,6 +112,8 @@ def main():
     print(f"  Patience:      {args.patience}")
     print(f"  Seed:          {args.seed}")
     print(f"  Augment put:   {args.augment_put}")
+    print(f"  Physics loss:  {args.physics_loss}"
+          + (f" (λ={args.physics_lambda})" if args.physics_loss else ""))
     print()
 
     model_kwargs = build_model_kwargs(args)
@@ -124,6 +143,8 @@ def main():
         patience=args.patience,
         device=args.device,
         augment_put=args.augment_put,
+        physics_loss=args.physics_loss,
+        physics_lambda=args.physics_lambda,
     )
 
     print()

@@ -61,6 +61,8 @@ def parse_args():
                    help='Physics-informed loss: delta korlát (∂C/∂moneyness ∈ [0,1])')
     p.add_argument('--physics-lambda', type=float, default=0.1,
                    help='Physics loss súlya λ: L = L_MSE + λ·L_delta (default: 0.1)')
+    p.add_argument('--name',         type=str, default=None,
+                   help='Checkpoint neve (default: modell neve, pl. resnet_phys)')
     return p.parse_args()
 
 
@@ -113,7 +115,7 @@ def main():
     print(f"  Seed:          {args.seed}")
     print(f"  Augment put:   {args.augment_put}")
     print(f"  Physics loss:  {args.physics_loss}"
-          + (f" (λ={args.physics_lambda})" if args.physics_loss else ""))
+          + (f" (lambda={args.physics_lambda})" if args.physics_loss else ""))
     print()
 
     model_kwargs = build_model_kwargs(args)
@@ -126,12 +128,14 @@ def main():
 
     feature_cols = AUGMENTED_FEATURE_COLS if args.augment_put else DEFAULT_FEATURE_COLS
 
+    checkpoint_name = args.name if args.name else args.model
+
     history = train_model(
         model=model,
         train_path=args.train,
         val_path=args.val,
         output_dir=args.output,
-        model_name=args.model,
+        model_name=checkpoint_name,
         model_class=args.model,
         model_kwargs=model_kwargs,
         feature_cols=feature_cols,

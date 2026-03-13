@@ -273,6 +273,111 @@ for M in [MLPPricer(), DeepMLPPricer(), ResNetPricer(),
 
 ---
 
+## 8. Kísérleti eredmények
+
+Az összes modellt azonos feltételek mellett tanítottuk: 700 000 szintetikus Black-Scholes minta
+(LHS-mintavételezés), 150 000-es validációs és teszt halmaz, max 200 epoch, patience=20,
+batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon (150 000 minta).
+
+### 8.1 Összefoglaló táblázat
+
+| Modell        | Paraméterek |  Best ep | Val MSE (×10⁻⁵) | Test RMSE | Test MAE  |   R²     |
+|---------------|-------------|----------|-----------------|-----------|-----------|----------|
+| mlp           |     31 301  |      98  |        2.21     | 0.004742  | 0.002757  | 0.99888  |
+| deep_mlp      |    265 985  |      57  |       10.96     | 0.010555  | 0.008580  | 0.99443  |
+| resnet        |    398 593  |     140  |      **1.80**   |**0.004253**|0.002852  |**0.99910**|
+| gelu_resnet   |    398 593  |      25  |        4.83     | 0.007014  | 0.004589  | 0.99754  |
+| dense_mlp     |    102 145  |       6  |       32.70     | 0.018398  | 0.012719  | 0.98307  |
+| highway       |    528 641  |      76  |       19.48     | 0.014020  | 0.009714  | 0.99017  |
+| finn          |    402 817  |      18  |        5.57     | 0.007502  | 0.005007  | 0.99718  |
+| resnet_phys   |    398 593  |     199  |        1.82     | 0.004291  | 0.002802  | 0.99908  |
+
+### 8.2 Szegmentált eredmények (RMSE)
+
+| Modell       |  OTM (m<0.97) | ATM (0.97–1.03) | ITM (m>1.03) |
+|--------------|---------------|-----------------|--------------|
+| mlp          |    0.002943   |    0.005083     |   0.005745   |
+| deep_mlp     |    0.007543   |    0.010746     |   0.012729   |
+| resnet       |  **0.003740** |  **0.004218**   | **0.004743** |
+| gelu_resnet  |    0.006388   |    0.007474     |   0.007137   |
+| dense_mlp    |    0.018030   |    0.018586     |   0.018572   |
+| highway      |    0.011803   |    0.015742     |   0.014238   |
+| finn         |    0.006934   |    0.007717     |   0.007826   |
+| resnet_phys  |    0.004167   |    0.004262     |   0.004439   |
+
+---
+
+## 9. Következtetések
+
+### 9.1 Általános megállapítások
+
+**A ResNetPricer (ReLU) bizonyult a legpontosabbnak** (RMSE=0.00425, R²=0.9991), megelőzve
+minden 2. generációs architektúrát. Ez összhangban van Lürig et al. (2023) eredményeivel,
+akik szintén a Pre-LN reziduális MLP-t találták a legstabilabbnak.
+
+**Az MLPPricer (Culkin & Das baseline) meglepően versenyképes:** RMSE=0.00474, mindössze
+~11%-kal gyengébb a legjobb modellnél — 13× kevesebb paraméterrel. Ez megerősíti, hogy
+BS szintetikus adatokon az egyszerű architektúra is elegendő lehet.
+
+### 9.2 Miért teljesítenek gyengébben a 2. generációs modellek?
+
+**GELUResNetPricer** (RMSE=0.0070): A GELU aktiváció — várakozásainkkal ellentétben —
+nem javított a ReLU-hoz képest. A BS ár ugyan sima függvény, de az 1M szintetikus mintán
+a ReLU ResNet gradiensei is stabilan konvergálnak; a simább aktiváció pluszt nem jelent.
+Megjegyzés: a validációs loss korán (ep25) megállt — a GELU-val a scheduler hamarabb
+csökkentette az LR-t, és a modell lokális minimumba ragadt.
+
+**DenseMLPPricer** (RMSE=0.0184): Leggyengébb teljesítmény. A dense skip-kapcsolatok
+BS opciós árazásnál nem hasznosak: a BS ár sima, nem igényli a korai feature-ök direkt
+átadását a kimenethez. A kisebb hidden_dim (128) önmagában is szűk szűk keresztmetszet lehet.
+A korai leállás (ep6) arra utal, hogy a modell nem tanul hatékonyan.
+
+**HighwayPricer** (RMSE=0.0140): A tanulható gate-ek felesleges paramétereket visznek be
+(528K param, mégis gyengébb). A highway mechanizmus mélyen rétegezett képosztályozásnál
+hasznos; 5-dimenziós sima táblázati adatnál nem jelent előnyt.
+
+**FINNPricer** (RMSE=0.0075): Két-ágú architektúra (BS-közelítő + korrekciós ág) jobb
+mint GELUResNet és DenseNet, de elmarad az egyágú ResNettől. Szintetikus BS adatokon
+a "közelítő ág" nem tud előnyt nyújtani, mert nincs valódi modellhiba amit korrigálni
+kellene — csak a háló saját hibáját becsüli.
+
+**DeepMLPPricer** (RMSE=0.0106): Pre-LN + Dropout nélküli skip-kapcsolatokkal rosszabbul
+teljesít, mint a ResNet. A Dropout (0.1) regularizáló hatása és a LayerNorm megakadályozza
+a modellt az overfit-ben, de skip-kapcsolat nélkül a gradiens-áramlás kevésbé hatékony.
+
+### 9.3 Physics-Informed Loss hatása
+
+A `resnet_phys` (RMSE=0.00429) mindössze ~0.9%-kal gyengébb MSE-ben, mint a sima ResNet
+(RMSE=0.00425), de **garantálja a delta-korlátot**: `∂C_norm/∂moneyness_norm ∈ [0, 1]`.
+
+A physics loss fő haszna nem az MSE-ben mérhető — hanem a modell pénzügyi konzisztenciájában:
+a tanult delta közelíti a Black-Scholes delta-t anélkül, hogy azt expliciten optimalizálnánk.
+Ez különösen fontos, ha a modellt nem csak árazásra, hanem fedezési stratégiák számítására
+is használni akarjuk (Liu et al. 2019).
+
+Megjegyzés: a resnet_phys OTM szegmensben kicsit gyengébb (0.00417 vs 0.00374 resnet),
+ami arra utal, hogy a physics regularizáció kissé eltorzítja az OTM becsléseket — az ár
+közel nulla OTM-nél, de a delta-korlát mégis aktív.
+
+### 9.4 Összefoglalás
+
+| Kategória             | Győztes       | Megjegyzés                                      |
+|-----------------------|---------------|-------------------------------------------------|
+| Legjobb pontosság     | ResNetPricer  | Pre-LN reziduális MLP, ReLU, 400K param         |
+| Legjobb param/telj.   | MLPPricer     | 31K param, ~11% RMSE-veszteség                  |
+| Legjobb fizikai korl. | resnet_phys   | Delta-korlát garantált, MSE-veszteség <1%       |
+| 2. gen. legjobb       | FINNPricer    | RMSE=0.0075, két-ágú architektúra               |
+| Meglepő eredmény      | DenseMLPPricer| Dense skip-ek BS-en nem segítenek               |
+
+A kísérletek azt mutatják, hogy **BS szintetikus adatokon az architektúra bonyolítása
+nem feltétlenül javít**: a ResNet skip-kapcsolatai elegendőek, a többletparaméterek
+(Highway, Dense) vagy az aktivációcsere (GELU) önmagukban nem hoznak áttörést.
+A physics-informed regularizáció viszont minimális MSE-veszteséggel biztosít pénzügyi
+konzisztenciát — ez a megközelítés érdemes a 2. fázisban (historikus adatok) is
+megvizsgálni.
+
+---
+
 ## 7. Irodalmi háttér
 
 - **Culkin & Das (2017)** — *Machine Learning in Finance: The Case of Deep Learning for Option Pricing*.

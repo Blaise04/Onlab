@@ -219,7 +219,7 @@ def train_model(
             moneyness_idx = (feature_cols or DEFAULT_FEATURE_COLS).index('moneyness_norm')
         except ValueError:
             raise ValueError("physics_loss=True, de 'moneyness_norm' nincs a feature_cols-ban.")
-        print(f"Physics-informed loss: bekapcsolva (λ={physics_lambda}, "
+        print(f"Physics-informed loss: bekapcsolva (lambda={physics_lambda}, "
               f"moneyness_idx={moneyness_idx})")
 
     os.makedirs(output_dir, exist_ok=True)

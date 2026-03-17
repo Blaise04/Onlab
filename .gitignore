@@ -1,6 +1,9 @@
 # Generált adathalmazok
 data/
 
+# Lokális promptok
+prompts/
+
 # Claude Code belső mappája
 .claude/
 

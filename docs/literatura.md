@@ -102,8 +102,8 @@ C/K = f(S/K, T, r, σ)
 - A neurális háló nem kell hogy tanulja az abszolút árszint-skálázást
 
 **Implementáció a projektben:**
-- Input: `[S/K, T, r, sigma]` (4 feature)
-- Output: `C/K`
+- Input: `[S/K, T, r, sigma, q]` (5 feature, normalizálva: `moneyness_norm, T_norm, r_norm, sigma_norm, q_norm`)
+- Output: `C/K` (`call_price_norm`)
 - A nyers C ár visszaszámítható: `C = (C/K) * K`
 
 ---

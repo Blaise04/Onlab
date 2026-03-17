@@ -30,11 +30,11 @@ call opció árakat becsülnek. Az architektúrák két generációban épülnek
 
 | Oszlop           | Leírás                         | Tartomány (eredeti) |
 |------------------|--------------------------------|---------------------|
-| `moneyness_norm` | S/K arány normálva             | [0.5, 2.0]          |
-| `T_norm`         | Lejáratig hátralévő idő        | [7/365, 2.0] év     |
-| `r_norm`         | Kockázatmentes ráta            | [0.0, 0.10]         |
-| `sigma_norm`     | Volatilitás                    | [0.05, 0.60]        |
-| `q_norm`         | Osztalékhozam                  | [0.0, 0.05]         |
+| `moneyness_norm` | S/K arány normálva             | [0.7, 1.3]          |
+| `T_norm`         | Lejáratig hátralévő idő        | [0.005, 2.0] év     |
+| `r_norm`         | Kockázatmentes ráta            | [0.0, 0.05]         |
+| `sigma_norm`     | Volatilitás                    | [0.05, 0.90]        |
+| `q_norm`         | Osztalékhozam                  | [0.0, 0.03]         |
 
 ### Kimenet
 
@@ -276,7 +276,7 @@ for M in [MLPPricer(), DeepMLPPricer(), ResNetPricer(),
 ## 7. Kísérleti eredmények
 
 Az összes modellt azonos feltételek mellett tanítottuk: 700 000 szintetikus Black-Scholes minta
-(LHS-mintavételezés), 150 000-es validációs és teszt halmaz, max 200 epoch, patience=20,
+(LHS-mintavételezés), 150 000-es validációs és teszt halmaz, max 200 epoch, patience=10,
 batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon (150 000 minta).
 
 ### 7.1 Összefoglaló táblázat
@@ -329,7 +329,7 @@ csökkentette az LR-t, és a modell lokális minimumba ragadt.
 
 **DenseMLPPricer** (RMSE=0.0184): Leggyengébb teljesítmény. A dense skip-kapcsolatok
 BS opciós árazásnál nem hasznosak: a BS ár sima, nem igényli a korai feature-ök direkt
-átadását a kimenethez. A kisebb hidden_dim (128) önmagában is szűk szűk keresztmetszet lehet.
+átadását a kimenethez. A kisebb hidden_dim (128) önmagában is szűk keresztmetszet lehet.
 A korai leállás (ep6) arra utal, hogy a modell nem tanul hatékonyan.
 
 **HighwayPricer** (RMSE=0.0140): A tanulható gate-ek felesleges paramétereket visznek be

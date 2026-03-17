@@ -41,7 +41,8 @@ python generate_dataset.py --n 300000 --method lhs --greeks --normalize --output
 | `--output` | str | `data/` | Kimeneti mappa |
 | `--format` | str | `csv` | Fájlformátum: `csv` vagy `parquet` |
 | `--greeks` | flag | ki | Görögök (delta, gamma, vega, theta, rho) számítása |
-| `--normalize` | flag | ki | Moneyness (S/K) és normált call ár (call/K) hozzáadása |
+| `--normalize` | flag | ki | Normált call ár (call/K) hozzáadása (`call_price_norm` oszlop) |
+| `--scale-inputs` | flag | ki | Bemeneti paraméterek [0,1]-re skálázása (min-max, `_norm` oszlopok) |
 | `--noise` | float | 0.0 | Gauss-zaj szórása az opció árakhoz |
 | `--seed` | int | 42 | Véletlenszám mag (reprodukálhatóság) |
 

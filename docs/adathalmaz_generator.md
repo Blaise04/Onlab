@@ -55,7 +55,7 @@ A mintavételezett paraméterek és levezetett értékek:
 | Változó | Minimum | Maximum | Típus | Leírás |
 |---------|---------|---------|-------|--------|
 | S | 10.0 | 150.0 | mintavételezett | Mögöttes eszköz árfolyama |
-| moneyness | 0.7 | 1.3 | mintavételezett | S/K arány (pénzesség) |
+| moneyness | 0.5 | 1.5 | mintavételezett | S/K arány (pénzesség) |
 | T | 0.005 | 2.0 | mintavételezett | Lejáratig hátralévő idő (év) |
 | r | 0.00 | 0.05 | mintavételezett | Kockázatmentes kamatláb |
 | sigma | 0.05 | 0.90 | mintavételezett | Volatilitás |

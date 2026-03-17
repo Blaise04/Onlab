@@ -15,7 +15,7 @@ from src.black_scholes import (
 
 DEFAULT_PARAMS = {
     'S':         (10.0, 150.0),
-    'moneyness': (0.7,    1.3),
+    'moneyness': (0.5,    1.5),
     'T':         (0.005,  2.0),
     'r':         (0.00,  0.05),
     'sigma':     (0.05,  0.90),

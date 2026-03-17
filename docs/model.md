@@ -30,7 +30,7 @@ call opció árakat becsülnek. Az architektúrák két generációban épülnek
 
 | Oszlop           | Leírás                         | Tartomány (eredeti) |
 |------------------|--------------------------------|---------------------|
-| `moneyness_norm` | S/K arány normálva             | [0.7, 1.3]          |
+| `moneyness_norm` | S/K arány normálva             | [0.5, 1.5]          |
 | `T_norm`         | Lejáratig hátralévő idő        | [0.005, 2.0] év     |
 | `r_norm`         | Kockázatmentes ráta            | [0.0, 0.05]         |
 | `sigma_norm`     | Volatilitás                    | [0.05, 0.90]        |

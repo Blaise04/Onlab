@@ -157,7 +157,7 @@ Az alábbi beállítás kiindulópontként ajánlott:
 | Paraméter | Tartomány | Típus | Eloszlás |
 |---|---|---|---|
 | S | [10, 150] | mintavételezett | Uniform |
-| moneyness (S/K) | [0.7, 1.3] | mintavételezett | Uniform |
+| moneyness (S/K) | [0.5, 1.5] | mintavételezett | Uniform |
 | K | — | levezetett: K = S / moneyness | — |
 | T | [0.005, 2.0] év | mintavételezett | Uniform |
 | r | [0.00, 0.05] | mintavételezett | Uniform |

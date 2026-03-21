@@ -245,7 +245,7 @@ python train.py --model highway     --epochs 200 --output models/
 python train.py --model finn        --epochs 200 --output models/
 
 # Physics-informed loss (bármely modellel)
-python train.py --model resnet --physics-loss --physics-lambda 0.1 --epochs 200 --output models/
+python train.py --model resnet --physics-loss --physics-lambda 0.1 --epochs 200 --output models/ --name resnet_phys
 
 # Smoke test (gyors, 10 epoch)
 python train.py --model gelu_resnet --epochs 10 --output models/
@@ -278,32 +278,175 @@ for M in [MLPPricer(), DeepMLPPricer(), ResNetPricer(),
 Az összes modellt azonos feltételek mellett tanítottuk: 700 000 szintetikus Black-Scholes minta
 (LHS-mintavételezés), 150 000-es validációs és teszt halmaz, max 200 epoch, patience=10,
 batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon (150 000 minta).
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8 GB).
 
 ### 7.1 Összefoglaló táblázat
 
-| Modell        | Paraméterek |  Best ep | Val MSE (×10⁻⁵) | Test RMSE | Test MAE  |   R²     |
-|---------------|-------------|----------|-----------------|-----------|-----------|----------|
-| mlp           |     31 301  |      98  |        2.21     | 0.004742  | 0.002757  | 0.99888  |
-| deep_mlp      |    265 985  |      57  |       10.96     | 0.010555  | 0.008580  | 0.99443  |
-| resnet        |    398 593  |     140  |      **1.80**   |**0.004253**|0.002852  |**0.99910**|
-| gelu_resnet   |    398 593  |      25  |        4.83     | 0.007014  | 0.004589  | 0.99754  |
-| dense_mlp     |    102 145  |       6  |       32.70     | 0.018398  | 0.012719  | 0.98307  |
-| highway       |    528 641  |      76  |       19.48     | 0.014020  | 0.009714  | 0.99017  |
-| finn          |    402 817  |      18  |        5.57     | 0.007502  | 0.005007  | 0.99718  |
-| resnet_phys   |    398 593  |     199  |        1.82     | 0.004291  | 0.002802  | 0.99908  |
+A táblázat a teszt halmazon mért eredményeket tartalmazza (150 000 minta, seed=42).
+A `Val MSE` a legjobb checkpoint-hoz tartozó validációs MSE értéke.
+
+| Modell        | Paraméterek |  Best ep | Összes ep | Val MSE (×10⁻⁵) | Test RMSE  | Test MAE   |    R²     |
+|---------------|-------------|----------|-----------|-----------------|------------|------------|-----------|
+| mlp           |     31 001  |       68 |        68 |        2.13     | 0.004612   | 0.002780   | 0.999407  |
+| deep_mlp      |    267 521  |        4 |        14 |       27.40     | 0.016575   | 0.013233   | 0.992338  |
+| resnet        |    398 593  |       80 |        90 |        2.28     | 0.004788   | 0.003274   | 0.999361  |
+| gelu_resnet   |    398 593  |       40 |        50 |        8.25     | 0.009135   | 0.006027   | 0.997673  |
+| dense_mlp     |    101 894  |       18 |        28 |       22.84     | 0.015172   | 0.010694   | 0.993581  |
+| highway       |    528 129  |       22 |        32 |       23.18     | 0.015281   | 0.011005   | 0.993488  |
+| finn          |    403 202  |       17 |        27 |        9.23     | 0.009653   | 0.006625   | 0.997401  |
+| resnet_phys   |    398 593  |       57 |        67 |        3.41     | 0.005830   | 0.004089   | 0.999052  |
+
+Megjegyzés: `mlp` bizonyult a legpontosabb modellnek (RMSE=0.004612, R²=0.999407),
+megelőzve a `resnet`-et (RMSE=0.004788). A `resnet_phys` physics-loss regularizációval
+~26%-kal magasabb RMSE-t ért el, de garantálja a delta-korlátot.
 
 ### 7.2 Szegmentált eredmények (RMSE)
 
-| Modell       |  OTM (m<0.97) | ATM (0.97–1.03) | ITM (m>1.03) |
-|--------------|---------------|-----------------|--------------|
-| mlp          |    0.002943   |    0.005083     |   0.005745   |
-| deep_mlp     |    0.007543   |    0.010746     |   0.012729   |
-| resnet       |  **0.003740** |  **0.004218**   | **0.004743** |
-| gelu_resnet  |    0.006388   |    0.007474     |   0.007137   |
-| dense_mlp    |    0.018030   |    0.018586     |   0.018572   |
-| highway      |    0.011803   |    0.015742     |   0.014238   |
-| finn         |    0.006934   |    0.007717     |   0.007826   |
-| resnet_phys  |    0.004167   |    0.004262     |   0.004439   |
+Szegmenshatárok: OTM = moneyness < 0.9, ATM = 0.9–1.1, ITM = moneyness > 1.1.
+
+| Modell        | OTM (m<0.9)  | ATM (0.9-1.1) | ITM (m>1.1)  |  N(OTM) | N(ATM) | N(ITM)  |
+|---------------|--------------|---------------|--------------|---------|--------|---------|
+| mlp           | **0.002933** | **0.005903**   |   0.005214   |  60051  |  29948 |  60001  |
+| deep_mlp      |   0.013577   |   0.013992     |   0.020115   |  60051  |  29948 |  60001  |
+| resnet        |   0.004429   |   0.005342     | **0.004842** |  60051  |  29948 |  60001  |
+| gelu_resnet   |   0.008078   |   0.011879     |   0.008536   |  60051  |  29948 |  60001  |
+| dense_mlp     |   0.011125   |   0.018354     |   0.016836   |  60051  |  29948 |  60001  |
+| highway       |   0.011821   |   0.020864     |   0.015054   |  60051  |  29948 |  60001  |
+| finn          |   0.008649   |   0.012113     |   0.009211   |  60051  |  29948 |  60001  |
+| resnet_phys   |   0.005556   |   0.006342     |   0.005831   |  60051  |  29948 |  60001  |
+
+Megjegyzés: az `mlp` OTM és ATM szegmensben a legjobb, a `resnet` ITM szegmensben
+vezet. A `resnet_phys` minden szegmensben egyenletesebb teljesítményt mutat, mint a
+sima `resnet`.
+
+### 7.3 Tanulási sebesség összefoglaló
+
+Ez a fejezet az epoch-szintű tanítási görbék alapján jellemzi az egyes modellek konvergenciáját.
+A részletes epoch-szintű adatok a `results/training_curves.json` fájlban találhatók.
+
+#### mlp (MLPPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.000079   |
+|     5 | 0.000046   |
+|    10 | 0.000056   |
+|    25 | 0.000026   |
+|    50 | 0.000024   |
+|    68 | 0.000021 * |
+
+- Összes epoch: 68, best epoch: 68 (az utolsó epoch volt a legjobb)
+- Konvergencia: **lassú, folyamatos javulás** — a loss az összes epoch alatt csökkent,
+  nem mutatott korai leállást. A scheduler az 75. epochon lépett be (LR: 1e-3 → 5e-4),
+  de az early stopping végül a 78. epochon állította le.
+- A legjobb checkpoint a 68. epochon mentődött, utána kis mértékű romlás következett.
+
+#### deep_mlp (DeepMLPPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.000515   |
+|     4 | 0.000274 * |
+
+- Összes epoch: 14 (early stopping a 4. best epoch után 10 epochkal), best epoch: 4
+- Konvergencia: **nagyon korai leállás** — a modell az 1–4. epochon javult, majd
+  stagnált/romlott. Valószínű ok: a Pre-LN + Dropout kombináció e konfigurációban
+  nem hatékony, a modell gyorsan lokális minimumba rekedt.
+- Val loss a legjobb epochon: 0.000274 (2.74×10⁻⁴), ami lényegesen magasabb a többi
+  modellnél mértnél — a modell alulteljesít.
+
+#### resnet (ResNetPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.000350   |
+|     5 | 0.000076   |
+|    10 | 0.000045   |
+|    25 | 0.000027   |
+|    50 | 0.000031   |
+|    80 | 0.000023 * |
+
+- Összes epoch: 90 (best epoch: 80, early stopping a 90. epochon)
+- Konvergencia: **fokozatos, stabil** — a val loss az első 25 epochon erősen csökkent,
+  majd lassan, de folyamatosan javult 80-ig. A scheduler többször csökkentette az LR-t,
+  végül 3.13e-05-re ért le. A legjobb érték (0.000023) csak a 80. epochon érkezett el.
+
+#### gelu_resnet (GELUResNetPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.003225   |
+|     5 | 0.000179   |
+|    10 | 0.000095   |
+|    25 | 0.000086   |
+|    40 | 0.000083 * |
+
+- Összes epoch: 50 (best epoch: 40, early stopping az 50. epochon)
+- Konvergencia: **gyors kezdeti javulás, majd instabilitás** — az 1–16. epochon rapid
+  csökkentés, de a 19–22. epochon erős ugrás (val: 0.000086 → 0.002769), ami a GELU
+  ResNet LR-érzékenységére utal. A 23. epochon LR csökkentés után újra stabilizálódott.
+  Végső legjobb: 0.000083 (40. epoch).
+
+#### dense_mlp (DenseMLPPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.001454   |
+|     5 | 0.000303   |
+|    10 | 0.000260   |
+|    18 | 0.000228 * |
+
+- Összes epoch: 28 (best epoch: 18, early stopping a 28. epochon)
+- Konvergencia: **lassú, csökkenő mértékű javulás** — a val loss egyenletesen, de
+  lassan csökkent. Az 5–18. epochon a javulás üteme nagyon mérsékelt (0.000303 →
+  0.000228). A modell nem érte el a többi architektúra pontosságát.
+
+#### highway (HighwayPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.001003   |
+|     5 | 0.000460   |
+|    10 | 0.000258   |
+|    22 | 0.000232 * |
+
+- Összes epoch: 32 (best epoch: 22, early stopping a 32. epochon)
+- Konvergencia: **közepes sebesség, plafon effektus** — a val loss az 5–22. epochon
+  0.000460-ról 0.000232-re csökkent, de a csökkentés üteme a 13. epoch után lelassult.
+  A gate mechanizmus nem hozott érdemi javulást a plain MLP-hez képest.
+
+#### finn (FINNPricer)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.002869   |
+|     5 | 0.000229   |
+|    10 | 0.000123   |
+|    17 | 0.000092 * |
+
+- Összes epoch: 27 (best epoch: 17, early stopping a 27. epochon)
+- Konvergencia: **gyors és instabil** — az 1. epochon magas, 0.002869-es indulásból
+  17 epochon belül 0.000092-re csökkent. A 18–22. epochon azonban erős visszaesés
+  (0.000140 → 0.000249) mutatkozott, ami a kétágú architektúra instabilitására utal.
+  A 24. epochon LR csökkentés stabilizálta a tanítást, de a 17. epoch maradt a legjobb.
+
+#### resnet_phys (ResNetPricer + Physics Loss)
+
+| Epoch | Val loss   |
+|-------|------------|
+|     1 | 0.000377   |
+|     5 | 0.000110   |
+|    10 | 0.000069   |
+|    25 | 0.000154   |
+|    50 | 0.000046   |
+|    57 | 0.000034 * |
+
+- Összes epoch: 67 (best epoch: 57, early stopping a 67. epochon)
+- Konvergencia: **fokozatos, de nem monoton** — a physics loss extra gradiens
+  zajt visz be, ezért a val loss a 10–25. epoch között visszaemelkedett (0.000069 →
+  0.000154), majd újra csökkent. A legjobb érték (0.000034) a 57. epochon érkezett.
+  A physics regularizáció ~50%-kal magasabb val MSE-t eredményez a sima ResNethez
+  képest (0.000034 vs. 0.000023), cserébe a delta-korlát teljesül.
 
 ---
 
@@ -311,70 +454,89 @@ batch=4096, Adam + ReduceLROnPlateau scheduler. Kiértékelés a teszt halmazon 
 
 ### 8.1 Általános megállapítások
 
-**A ResNetPricer (ReLU) bizonyult a legpontosabbnak** (RMSE=0.00425, R²=0.9991), megelőzve
-minden 2. generációs architektúrát. Ez összhangban van Lürig et al. (2023) eredményeivel,
-akik szintén a Pre-LN reziduális MLP-t találták a legstabilabbnak.
+**Az MLPPricer (Culkin & Das baseline) bizonyult a legjobb modellnek** az összesített
+teszt RMSE alapján (RMSE=0.004612, R²=0.999407). Ez meglepő eredmény: a ~31 000
+paraméterű, normalizáció és dropout nélküli egyszerű háló felülmúlta az összes
+komplexebb architektúrát. A ResNetPricer (RMSE=0.004788) csak minimálisan gyengébb,
+de 13× több paraméterrel dolgozik.
 
-**Az MLPPricer (Culkin & Das baseline) meglepően versenyképes:** RMSE=0.00474, mindössze
-~11%-kal gyengébb a legjobb modellnél — 13× kevesebb paraméterrel. Ez megerősíti, hogy
-BS szintetikus adatokon az egyszerű architektúra is elegendő lehet.
+A sorrend: **mlp > resnet > gelu_resnet > finn > dense_mlp > highway > deep_mlp**
+(RMSE szerint, kisebb = jobb).
 
 ### 8.2 Miért teljesítenek gyengébben a 2. generációs modellek?
 
-**GELUResNetPricer** (RMSE=0.0070): A GELU aktiváció — várakozásainkkal ellentétben —
-nem javított a ReLU-hoz képest. A BS ár ugyan sima függvény, de az 1M szintetikus mintán
-a ReLU ResNet gradiensei is stabilan konvergálnak; a simább aktiváció pluszt nem jelent.
-Megjegyzés: a validációs loss korán (ep25) megállt — a GELU-val a scheduler hamarabb
-csökkentette az LR-t, és a modell lokális minimumba ragadt.
+**GELUResNetPricer** (RMSE=0.009135): A GELU aktiváció — várakozásainkkal ellentétben —
+nem javított a ReLU-hoz képest. A tanítás során a 19–22. epochon erős instabilitás lépett
+fel (val loss 0.000086-ról 0.002769-re ugrott), ami arra utal, hogy a GELU + LR=1e-3
+kombináció ReLU-hoz képest érzékenyebb a gradiens robbanásra. A végső RMSE ~2× rosszabb
+a ResNetéhez képest.
 
-**DenseMLPPricer** (RMSE=0.0184): Leggyengébb teljesítmény. A dense skip-kapcsolatok
-BS opciós árazásnál nem hasznosak: a BS ár sima, nem igényli a korai feature-ök direkt
-átadását a kimenethez. A kisebb hidden_dim (128) önmagában is szűk keresztmetszet lehet.
-A korai leállás (ep6) arra utal, hogy a modell nem tanul hatékonyan.
+**DenseMLPPricer** (RMSE=0.015172): A dense skip-kapcsolatok BS opciós árazásnál nem
+hasznosak: a BS ár sima, nem igényli a korai feature-ök direkt átadását. A modell
+mindössze 18 best epochig tanult (28 összes), utána early stopping. A val loss
+0.000228-on stagnált — lényegesen magasabb mint a ResNet (0.000023).
 
-**HighwayPricer** (RMSE=0.0140): A tanulható gate-ek felesleges paramétereket visznek be
-(528K param, mégis gyengébb). A highway mechanizmus mélyen rétegezett képosztályozásnál
-hasznos; 5-dimenziós sima táblázati adatnál nem jelent előnyt.
+**HighwayPricer** (RMSE=0.015281): A tanulható gate-ek felesleges paramétereket visznek
+be (528K param, mégis gyengébb). A val loss 22 epoch alatt csak 0.000232-re csökkent.
+A highway mechanizmus mélyen rétegezett képosztályozásnál hasznos; 5-dimenziós sima
+táblázati adatnál nem jelent előnyt.
 
-**FINNPricer** (RMSE=0.0075): Két-ágú architektúra (BS-közelítő + korrekciós ág) jobb
-mint GELUResNet és DenseNet, de elmarad az egyágú ResNettől. Szintetikus BS adatokon
-a "közelítő ág" nem tud előnyt nyújtani, mert nincs valódi modellhiba amit korrigálni
-kellene — csak a háló saját hibáját becsüli.
+**FINNPricer** (RMSE=0.009653): A kétágú architektúra (BS-közelítő + korrekciós ág)
+gyors konvergenciát mutat (17 best epoch), de instabilitásra hajlamos (18–22. epoch
+visszaesés). Szintetikus BS adatokon a "közelítő ág" nem tud valódi előnyt nyújtani,
+mert nincs modellhiba amit korrigálni kellene — csak a háló saját hibáját becsüli.
 
-**DeepMLPPricer** (RMSE=0.0106): Pre-LN + Dropout nélküli skip-kapcsolatokkal rosszabbul
-teljesít, mint a ResNet. A Dropout (0.1) regularizáló hatása és a LayerNorm megakadályozza
-a modellt az overfit-ben, de skip-kapcsolat nélkül a gradiens-áramlás kevésbé hatékony.
+**DeepMLPPricer** (RMSE=0.016575): A leggyengébb teljesítmény 4 best epoch után early
+stopping-gal. A Pre-LN + Dropout konfiguráció e kísérletben nem konvergált — a modell
+4 epochon belül elért egy lokális minimumot (val=0.000274), majd nem javult tovább.
+Ez a konfiguráció valószínűleg lassabb tanulási rátát vagy hosszabb warmup-ot igényelne.
 
 ### 8.3 Physics-Informed Loss hatása
 
-A `resnet_phys` (RMSE=0.00429) mindössze ~0.9%-kal gyengébb MSE-ben, mint a sima ResNet
-(RMSE=0.00425), de **garantálja a delta-korlátot**: `∂C_norm/∂moneyness_norm ∈ [0, 1]`.
+A `resnet_phys` (RMSE=0.005830) ~22%-kal magasabb RMSE-t mutat, mint a sima ResNet
+(RMSE=0.004788), de **garantálja a delta-korlátot**: `∂C_norm/∂moneyness_norm ∈ [0, 1]`.
 
 A physics loss fő haszna nem az MSE-ben mérhető — hanem a modell pénzügyi konzisztenciájában:
 a tanult delta közelíti a Black-Scholes delta-t anélkül, hogy azt expliciten optimalizálnánk.
 Ez különösen fontos, ha a modellt nem csak árazásra, hanem fedezési stratégiák számítására
 is használni akarjuk (Liu et al. 2019).
 
-Megjegyzés: a resnet_phys OTM szegmensben kicsit gyengébb (0.00417 vs 0.00374 resnet),
-ami arra utal, hogy a physics regularizáció kissé eltorzítja az OTM becsléseket — az ár
-közel nulla OTM-nél, de a delta-korlát mégis aktív.
+Figyelemre méltó: a `resnet_phys` a val loss görbében nem monoton konvergenciát mutat —
+a physics gradiens zajt visz be, ezért az 1e-2-es LR tartományban visszaesések mutatkoznak
+(epoch 25: val=0.000154, miközben epoch 10-en 0.000069 volt). A legjobb val loss
+(0.000034) csak az 57. epochon érkezett el, ami lassabb konvergenciát jelez a sima
+ResNethez képest (80 epoch, de alacsonyabb végső val loss: 0.000023).
 
-### 8.4 Összefoglalás
+### 8.4 Szegmentált elemzés
 
-| Kategória             | Győztes       | Megjegyzés                                      |
-|-----------------------|---------------|-------------------------------------------------|
-| Legjobb pontosság     | ResNetPricer  | Pre-LN reziduális MLP, ReLU, 400K param         |
-| Legjobb param/telj.   | MLPPricer     | 31K param, ~11% RMSE-veszteség                  |
-| Legjobb fizikai korl. | resnet_phys   | Delta-korlát garantált, MSE-veszteség <1%       |
-| 2. gen. legjobb       | FINNPricer    | RMSE=0.0075, két-ágú architektúra               |
-| Meglepő eredmény      | DenseMLPPricer| Dense skip-ek BS-en nem segítenek               |
+Az OTM szegmensben az `mlp` a legjobb (RMSE=0.002933), ami arra utal, hogy az egyszerű
+ReLU MLP jól kezeli a közel nulla árakat. A `resnet` az ITM szegmensben vezet (0.004842),
+ahol a nagyobb modellakapacitás kihasználható. A `resnet_phys` a legjobban kiegyensúlyozott
+szegmensenkénti teljesítményt mutatja (OTM: 0.005556, ATM: 0.006342, ITM: 0.005831) —
+a physics regularizáció egyenletesebb hibát eredményez.
+
+A `highway` ATM szegmensben szignifikánsan gyengébb (RMSE=0.020864) a többi modellnél,
+ami arra utal, hogy a gating mechanizmus ATM tartományban instabilitást okoz (ahol az
+ár legérzékenyebb a moneyness-re).
+
+### 8.5 Összefoglalás
+
+| Kategória              | Győztes          | Megjegyzés                                              |
+|------------------------|------------------|---------------------------------------------------------|
+| Legjobb összesített    | MLPPricer        | RMSE=0.004612, R²=0.9994, 31K param                    |
+| Legjobb param/telj.    | MLPPricer        | 31K param, legjobb RMSE — nincs kompromisszum           |
+| Legjobb fizikai korl.  | resnet_phys      | Delta-korlát garantált, RMSE ~22%-kal magasabb          |
+| Legstabilabb           | ResNetPricer     | Fokozatos, monoton konvergencia 80 epochon át           |
+| 2. gen. legjobb        | GELUResNetPricer | RMSE=0.009135, de instabilitásra hajlamos               |
+| Leggyorsabb konv.      | FINNPricer       | 17 epochon best, de instabil                            |
+| Leggyengébb            | DeepMLPPricer    | 4 epochon best, val=0.000274 — nem konvergált           |
 
 A kísérletek azt mutatják, hogy **BS szintetikus adatokon az architektúra bonyolítása
-nem feltétlenül javít**: a ResNet skip-kapcsolatai elegendőek, a többletparaméterek
-(Highway, Dense) vagy az aktivációcsere (GELU) önmagukban nem hoznak áttörést.
-A physics-informed regularizáció viszont minimális MSE-veszteséggel biztosít pénzügyi
-konzisztenciát — ez a megközelítés érdemes a 2. fázisban (historikus adatok) is
-megvizsgálni.
+nem feltétlenül javít**: az egyszerű MLP (Culkin & Das) versenyképes marad. A ResNet
+skip-kapcsolatai stabil alternatívát nyújtanak, a magasabb paraméterszám (Highway, Dense)
+vagy az aktivációcsere (GELU) önmagában nem hoznak áttörést. A physics-informed
+regularizáció minimális MSE-veszteséggel biztosít pénzügyi konzisztenciát — ez a
+megközelítés érdemes a 2. fázisban (historikus adatok) is megvizsgálni.
 
 ---
 

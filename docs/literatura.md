@@ -52,13 +52,13 @@
 
 ---
 
-### Lürig, Wallmeier & Ziegler (2023)
+### Lürig, Wallmeier & Ziegler (2023) — ⚠️ Nem ellenőrzött hivatkozás
 - **Szerzők:** Matthias Lürig, Martin Wallmeier, Andreas Ziegler
 - **Cím:** Neural network architecture comparison for European option pricing
-- **Folyóirat:** arXiv preprint
+- **Folyóirat:** arXiv preprint (nem ellenőrzött)
 - **Architektúra:** Empirikus összehasonlítás: MLP vs. ResNet vs. Highway Network
 - **Kulcstanulság:** A Highway Network és ResNet skip connection-jei javítanak a gradiens propagáción mély hálóknál, de sekélyebb hálóknál (3–5 réteg) az egyszerű MLP is versenyképes. Batch normalization helyett Layer normalization stabilabb viselkedést mutat. Az optimális architektúra: 4–5 réteg, 64–256 neuron rétegenkénti, residual kapcsolatokkal. A tanulmány szintetikus és valós S&P 500 adatokon is elvégzi a kísérleteket.
-- **Hivatkozás:** https://arxiv.org/abs/2312.xxxxx *(pontos arXiv ID szükséges)*
+- **Hivatkozás:** *(A hivatkozás nem található — arXiv, SSRN, Semantic Scholar és a Fribourgi Egyetem publikációs listáján sem szerepel. Valószínűleg hallucináció. Helyettesítő forrás: Della Corte, Van Mieghem, Papapantoleon & Papazoglou-Hennig (2023): "Machine learning for option pricing: an empirical investigation of network architectures", arXiv:2307.07657, https://arxiv.org/abs/2307.07657 — ez tartalmaz MLP/ResNet/Highway hálózat összehasonlítást BS és Heston modelleken.)*
 
 ---
 

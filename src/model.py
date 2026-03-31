@@ -91,16 +91,17 @@ class DeepMLPPricer(nn.Module):
 # ---------------------------------------------------------------------------
 
 class _ResidualBlock(nn.Module):
-    """Pre-LN reziduális blokk: x → LayerNorm → Linear → ReLU → Dropout → Linear → + x"""
+    """BatchNorm reziduális blokk: x → Linear → BatchNorm1d → ReLU → Dropout → Linear → BatchNorm1d → + x"""
 
     def __init__(self, dim: int, dropout: float = 0.1):
         super().__init__()
         self.block = nn.Sequential(
-            nn.LayerNorm(dim),
             nn.Linear(dim, dim),
+            nn.BatchNorm1d(dim),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(dim, dim),
+            nn.BatchNorm1d(dim),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -109,12 +110,12 @@ class _ResidualBlock(nn.Module):
 
 class ResNetPricer(nn.Module):
     """
-    Reziduális MLP Pre-LN blokkokkal, Della Corte et al. (2023) alapján.
+    Reziduális MLP BatchNorm blokkokkal, Della Corte et al. (2023) alapján.
 
     Architektúra:
-        Input(5) → Linear(5→256) → ReLU        ← input projekció
+        Input(5) → Linear(5→256) → BatchNorm1d → ReLU   ← input projekció
                  → [ResidualBlock(256)] × n_blocks
-                 → LayerNorm → Linear(256→1)
+                 → Linear(256→1)
 
     Paraméterek (default): ~400 000
     """
@@ -124,18 +125,17 @@ class ResNetPricer(nn.Module):
         super().__init__()
         self.input_proj = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
         )
         self.blocks = nn.Sequential(
             *[_ResidualBlock(hidden_dim, dropout) for _ in range(n_blocks)]
         )
-        self.output_norm = nn.LayerNorm(hidden_dim)
         self.output_proj = nn.Linear(hidden_dim, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_proj(x)
         x = self.blocks(x)
-        x = self.output_norm(x)
         return self.output_proj(x)
 
 

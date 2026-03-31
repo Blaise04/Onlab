@@ -77,18 +77,17 @@ Input(5)
 
 ```
 Input(5)
-  → Linear(5 → 256) → ReLU          ← input projekció
+  → Linear(5 → 256) → BatchNorm1d → ReLU   ← input projekció
   → [ResidualBlock(256)] × 3
-  → LayerNorm
   → Linear(256 → 1)
 ```
 
 **ResidualBlock(dim)**:
 ```
-x → LayerNorm → Linear(dim→dim) → ReLU → Dropout(0.1) → Linear(dim→dim) → + x
+x → Linear(dim→dim) → BatchNorm1d → ReLU → Dropout(0.1) → Linear(dim→dim) → BatchNorm1d → + x
 ```
 
-- Pre-LN reziduális kapcsolat (nincs projekciós réteg: dim_in == dim_out)
+- Post-BN reziduális kapcsolat (nincs projekciós réteg: dim_in == dim_out)
 - `ResNetPricer(input_dim=5, hidden_dim=256, n_blocks=3, dropout=0.1)`
 
 ### 3.4 GELUResNetPricer — ResNet GELU aktivációval

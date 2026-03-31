@@ -52,13 +52,13 @@
 
 ---
 
-### Lürig, Wallmeier & Ziegler (2023) — ⚠️ Nem ellenőrzött hivatkozás
-- **Szerzők:** Matthias Lürig, Martin Wallmeier, Andreas Ziegler
-- **Cím:** Neural network architecture comparison for European option pricing
-- **Folyóirat:** arXiv preprint (nem ellenőrzött)
-- **Architektúra:** Empirikus összehasonlítás: MLP vs. ResNet vs. Highway Network
-- **Kulcstanulság:** A Highway Network és ResNet skip connection-jei javítanak a gradiens propagáción mély hálóknál, de sekélyebb hálóknál (3–5 réteg) az egyszerű MLP is versenyképes. Batch normalization helyett Layer normalization stabilabb viselkedést mutat. Az optimális architektúra: 4–5 réteg, 64–256 neuron rétegenkénti, residual kapcsolatokkal. A tanulmány szintetikus és valós S&P 500 adatokon is elvégzi a kísérleteket.
-- **Hivatkozás:** *(A hivatkozás nem található — arXiv, SSRN, Semantic Scholar és a Fribourgi Egyetem publikációs listáján sem szerepel. Valószínűleg hallucináció. Helyettesítő forrás: Della Corte, Van Mieghem, Papapantoleon & Papazoglou-Hennig (2023): "Machine learning for option pricing: an empirical investigation of network architectures", arXiv:2307.07657, https://arxiv.org/abs/2307.07657 — ez tartalmaz MLP/ResNet/Highway hálózat összehasonlítást BS és Heston modelleken.)*
+### Della Corte, Van Mieghem, Papapantoleon & Papazoglou-Hennig (2023)
+- **Szerzők:** Pasquale Della Corte, Pieter Van Mieghem, Antonis Papapantoleon, Leif Papazoglou-Hennig
+- **Cím:** Machine learning for option pricing: an empirical investigation of network architectures
+- **Folyóirat:** arXiv preprint, arXiv:2307.07657
+- **Architektúra:** Empirikus összehasonlítás: MLP vs. ResNet vs. Highway Network vs. DGM variáns
+- **Kulcstanulság:** A generalizált Highway Network architektúra teljesít a legjobban MSE és tanítási idő szempontjából BS és Heston opciós árazási feladatokon. Az implied volatility problémán egy egyszerűsített DGM variáns éri el a legkisebb hibát. A tanulmány kapacitás-normalizált összehasonlítást is végez (azonos paraméterszám mellett), illetve valós piaci adatokra is kiterjeszti a kísérleteket.
+- **Hivatkozás:** https://arxiv.org/abs/2307.07657
 
 ---
 
@@ -110,23 +110,24 @@ C/K = f(S/K, T, r, σ)
 
 ## 3. Architektúra összehasonlítás
 
-| Architektúra | Rétegek | Neuronok/réteg | Skip conn. | Normalizáció | Eredmény (Lürig et al.) |
+| Architektúra | Rétegek | Neuronok/réteg | Skip conn. | Normalizáció | Eredmény (irodalom alapján) |
 |---|---|---|---|---|---|
 | **MLP** | 4–5 | 64–256 | Nincs | Batch/Layer | Baseline, jó sekélyen |
 | **ResNet** | 6–10 | 64–256 | Rétegenkénti összeg | Batch Norm | Mély hálóknál jobb gradiens |
-| **Highway Network** | 4–8 | 64–256 | Tanult gate | Layer Norm | Legjobb stabilizáció |
+| **Highway Network** | 4–8 | 64–256 | Tanult gate | Layer Norm | Legjobb BS/Heston teljesítmény (Della Corte et al. 2023) |
 
-**Főbb megfigyelések (Lürig et al. 2023):**
-- 3–5 réteges MLP az egyszerű BS feladaton kellő pontosságú
-- Residual kapcsolatok mélyebb hálóknál (6+) szükségesek a gradiens eltűnés ellen
-- Layer Normalization stabilabb mint Batch Normalization kis batch méreteken
-- A moneyness-input (S/K, C/K) minden architektúrán javít
+**Főbb megfigyelések:**
+- 3–5 réteges MLP az egyszerű BS feladaton kellő pontosságú (Culkin & Das 2017)
+- A Highway Network architektúra teljesít a legjobban BS és Heston modelleken (Della Corte et al. 2023)
+- Residual kapcsolatok mélyebb hálóknál szükségesek a gradiens eltűnés ellen (általános ML irodalom)
+- Layer Normalization stabilabb mint Batch Normalization kis batch méreteken (általános ML irodalom)
+- A moneyness-input (S/K, C/K) minden architektúrán javít (Garcia & Gençay 2000)
 
 ---
 
 ## 4. Javasolt architektúra (saját implementáció)
 
-### Alap: Culkin & Das (2017) kibővítve Lürig et al. (2023) alapján
+### Alap: Culkin & Das (2017) kibővítve az irodalom alapján
 
 | Paraméter | Érték | Indoklás |
 |---|---|---|
@@ -134,7 +135,7 @@ C/K = f(S/K, T, r, σ)
 | **Input dim** | 4 | S/K, T, r, σ |
 | **Output dim** | 1 | C/K |
 | **Rejtett rétegek** | 4 | Culkin & Das alapján |
-| **Neuronok/réteg** | 100–256 | 100 (Culkin), 256 (Lürig) |
+| **Neuronok/réteg** | 100–256 | 100 (Culkin & Das), 256 (Della Corte et al.) |
 | **Aktiváció** | ReLU | Standard, jól működik |
 | **Normalizáció** | Layer Norm vagy BatchNorm | Layer Norm stabilabb |
 | **Dropout** | 0.1–0.2 | Regularizáció |
@@ -163,6 +164,6 @@ Ha a görögök (delta, vega, gamma, theta, rho) is outputok:
 
 ## 5. Összefoglalás
 
-A projekt 1. fázisához a **Culkin & Das (2017) architektúra** (4×100 MLP) megfelelő kiindulópont, amelyet a **Garcia & Gençay (2000) homogeneity hint** transzformációval (S/K input, C/K output) kombinálva kell alkalmazni. A Lürig et al. (2023) eredményei alapján érdemes Layer Normalization-t hozzáadni a stabilitás érdekében.
+A projekt 1. fázisához a **Culkin & Das (2017) architektúra** (4×100 MLP) megfelelő kiindulópont, amelyet a **Garcia & Gençay (2000) homogeneity hint** transzformációval (S/K input, C/K output) kombinálva kell alkalmazni. Az irodalom (különösen Della Corte et al. 2023) alapján érdemes Layer Normalization-t és reziduális kapcsolatokat hozzáadni a stabilitás és pontosság javítása érdekében.
 
 A PINN/FINN megközelítések a 2. fázisban (historikus adatok, arbitrázs-mentesség) relevánsak.

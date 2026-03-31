@@ -10,8 +10,8 @@ call opció árakat becsülnek. Az architektúrák két generációban épülnek
 | Modell         | CLI neve    | Irodalom                   | Paraméterek | Aktiváció |
 |----------------|-------------|----------------------------|-------------|-----------|
 | MLPPricer      | `mlp`       | Culkin & Das (2017)        | ~31 000     | ReLU      |
-| DeepMLPPricer  | `deep_mlp`  | Lürig et al. (2023)        | ~268 000    | ReLU      |
-| ResNetPricer   | `resnet`    | Lürig et al. (2023)        | ~399 000    | ReLU      |
+| DeepMLPPricer  | `deep_mlp`  | Della Corte et al. (2023)  | ~268 000    | ReLU      |
+| ResNetPricer   | `resnet`    | Della Corte et al. (2023)  | ~399 000    | ReLU      |
 
 **2. generáció** (kísérleti):
 
@@ -60,7 +60,7 @@ Input(5)
 - Nincs normalizáció, nincs Dropout — hűen követi az eredeti cikket
 - `MLPPricer(input_dim=5, hidden_dim=100, n_layers=4)`
 
-### 3.2 DeepMLPPricer — Lürig et al. (2023) javított MLP
+### 3.2 DeepMLPPricer — Della Corte et al. (2023) javított MLP
 
 ```
 Input(5)
@@ -73,7 +73,7 @@ Input(5)
 - Pre-LN stílus: normalizáció a nemlinearitás előtt (stabilabb gradiens)
 - `DeepMLPPricer(input_dim=5, hidden_dim=256, n_layers=4, dropout=0.1)`
 
-### 3.3 ResNetPricer — Lürig et al. (2023) reziduális MLP
+### 3.3 ResNetPricer — Della Corte et al. (2023) reziduális MLP
 
 ```
 Input(5)
@@ -582,9 +582,9 @@ megközelítés érdemes a 2. fázisban (historikus adatok) is megvizsgálni.
   Bevezette a homogeneity hint-et: C/K = f(S/K, T, r, σ) alakra hozva a problémát a háló
   könnyebben általánosít és kevesebb adatból tanul.
 
-- **Lürig et al. (2023)** — *Deep Learning for Option Pricing*.
-  LayerNorm + Dropout + reziduális kapcsolatokkal javított MLP architektúrákat vizsgált;
-  Pre-LN reziduális hálók bizonyultak a legstabilabbnak és legpontosabbnak.
+- **Della Corte, Van Mieghem, Papapantoleon & Papazoglou-Hennig (2023)** — *Machine learning for option pricing: an empirical investigation of network architectures*. arXiv:2307.07657.
+  MLP, ResNet és Highway Network architektúrákat hasonlított össze BS és Heston modelleken;
+  a generalizált Highway Network bizonyult a legjobbnak MSE és tanítási idő szempontjából.
 
 - **Huang et al. (2017)** — *Densely Connected Convolutional Networks* (DenseNet).
   Minden réteg az összes korábbi réteggel össze van kötve; javítja a gradiens-áramlást

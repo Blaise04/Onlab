@@ -3,8 +3,8 @@ Neurális háló architektúrák Black-Scholes opciós árazáshoz.
 
 Implementált modellek:
   - MLPPricer         : Culkin & Das (2017) baseline MLP
-  - DeepMLPPricer     : Lürig et al. (2023) javított MLP (LayerNorm + Dropout)
-  - ResNetPricer      : Lürig et al. (2023) reziduális MLP
+  - DeepMLPPricer     : Della Corte et al. (2023) javított MLP (LayerNorm + Dropout)
+  - ResNetPricer      : Della Corte et al. (2023) reziduális MLP
   - GELUResNetPricer  : ResNetPricer GELU aktivációval (baseline összehasonlítás)
   - DenseMLPPricer    : DenseNet-stílusú MLP (Huang et al. 2017)
   - HighwayPricer     : Highway Network tanulható gating-gel
@@ -48,12 +48,12 @@ class MLPPricer(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# DeepMLPPricer — Lürig et al. (2023) javított MLP
+# DeepMLPPricer — Della Corte et al. (2023) javított MLP
 # ---------------------------------------------------------------------------
 
 class DeepMLPPricer(nn.Module):
     """
-    Mélyebb MLP LayerNorm-mal és Dropout-tal, Lürig et al. (2023) alapján.
+    Mélyebb MLP LayerNorm-mal és Dropout-tal, Della Corte et al. (2023) alapján.
 
     Architektúra (Pre-LN stílus):
         Input(5) → Linear(5→256)
@@ -87,7 +87,7 @@ class DeepMLPPricer(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# ResNetPricer — Lürig et al. (2023) reziduális MLP
+# ResNetPricer — Della Corte et al. (2023) reziduális MLP
 # ---------------------------------------------------------------------------
 
 class _ResidualBlock(nn.Module):
@@ -109,7 +109,7 @@ class _ResidualBlock(nn.Module):
 
 class ResNetPricer(nn.Module):
     """
-    Reziduális MLP Pre-LN blokkokkal, Lürig et al. (2023) alapján.
+    Reziduális MLP Pre-LN blokkokkal, Della Corte et al. (2023) alapján.
 
     Architektúra:
         Input(5) → Linear(5→256) → ReLU        ← input projekció

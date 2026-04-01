@@ -2,9 +2,9 @@
 
 ## Generálás
 
-- **Dátum**: 2026-03-17
-- **Parancs**: `python generate_dataset.py --n 1000000 --method lhs --greeks --normalize --scale-inputs --format parquet --seed 42 --output data/`
-- **Futási idő**: 1.68 másodperc
+- **Dátum**: 2026-03-21
+- **Parancs**: `python generate_dataset.py --n 1000000 --method lhs --normalize --format parquet --seed 42`
+- **Futási idő**: 0.78 másodperc
 - **Seed**: 42
 
 ## Mintavételezési módszer
@@ -40,23 +40,13 @@ Az LHS az egységkockát egyenlő valószínűségű cellákra osztja dimenziók
 - `put_price` – Black-Scholes put ár
 - `call_price_norm` – Normált call ár (call_price / K)
 
-### Görög betűk (görög feature-ök)
-- `delta` – ár érzékenysége S-re
-- `gamma` – delta érzékenysége S-re
-- `vega` – ár érzékenysége sigma-ra
-- `theta` – ár érzékenysége T-re (időromlás)
-- `rho` – ár érzékenysége r-re
-
-### Skálázott input feature-ök ([0,1])
-- `S_norm`, `moneyness_norm`, `T_norm`, `r_norm`, `sigma_norm`, `q_norm`
-
 ## Fájlok
 
 | Fájl | Sorok | Méret |
 |------|-------|-------|
-| `data/train.parquet` | 700 000 | 117.64 MB |
-| `data/val.parquet` | 150 000 | 29.47 MB |
-| `data/test.parquet` | 150 000 | 29.47 MB |
+| `data/train.parquet` | 700 000 | 57 MB |
+| `data/val.parquet` | 150 000 | 15 MB |
+| `data/test.parquet` | 150 000 | 15 MB |
 
 **Felosztás**: 70% train / 15% val / 15% test (véletlenszerű shuffle, seed=42)
 
@@ -70,6 +60,4 @@ Generált eredmény: 10.4506
 - **LHS vs uniform**: Az LHS szisztematikusan lefedi a paraméterteret, elkerüli a klaszteresedést.
 - **LHS vs grid**: A 6 dimenziós rács 1M pontnál ~4 pont/dimenzió lenne, ami nagyon durva. Az LHS folytonos és jobb.
 - **Parquet vs CSV**: 1M sornál a Parquet ~5-10x kisebb fájlméretet és gyorsabb I/O-t biztosít.
-- **Görögök bekapcsolva**: Jövőbeli célváltozóként vagy regularizációs jelként hasznosak.
 - **Normalizáció**: A `call_price_norm` (call/K) dimenziómentes, más K értékekre is általánosítható modellt tesz lehetővé.
-- **Scale-inputs**: A `_norm` oszlopok [0,1] skálán vannak, ami ML betanításnál (különösen MLP esetén) stabilitást javít.

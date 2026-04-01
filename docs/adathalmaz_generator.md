@@ -121,9 +121,9 @@ A generátor automatikusan 70% / 15% / 15% arányban bontja szét az adathalmazt
 
 ```
 data/
-  train.csv   # 70% – betanítás
-  val.csv     # 15% – validáció (hiperparaméter-hangolás)
-  test.csv    # 15% – végső kiértékelés
+  train.parquet   # 70% – betanítás
+  val.parquet     # 15% – validáció (hiperparaméter-hangolás)
+  test.parquet    # 15% – végső kiértékelés
 ```
 
 Parquet formátumhoz (`--format parquet`) szükséges a `pyarrow` csomag.

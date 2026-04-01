@@ -13,19 +13,19 @@ A szintetikus adathalmaz előnye, hogy:
 
 ## 2. Bemeneti paraméterek
 
-| Paraméter | Szimbólum | Leírás | Ajánlott tartomány | Eloszlás |
-|---|---|---|---|---|
-| Részvényár | S | Az alaptermék jelenlegi piaci ára | $10 – $150 (vagy S/K ∈ [0.7, 1.3]) | Uniform vagy log-normális (GBM) |
+| Paraméter | Szimbólum | Leírás | Ajánlott tartomány                            | Eloszlás |
+|---|---|---|-----------------------------------------------|---|
+| Részvényár | S | Az alaptermék jelenlegi piaci ára | $10 – $150 (vagy S/K ∈ [0.5, 1.5])            | Uniform vagy log-normális (GBM) |
 | Kötési ár | K | Az opció lehívási ára | $7 – $650 (Culkin) / $20 – $90 (Tidy Finance) | Uniform |
-| Lejáratig hátralévő idő | T | Években mérve | 0.005 – 2.0 év (≈ 2 nap – 2 év) | Uniform |
-| Kockázatmentes kamatláb | r | Éves kamatláb | 0% – 5% | Uniform |
-| Osztalékhozam | q | Éves osztalékhozam | 0% – 3% | Uniform (opcionális paraméter) |
-| Volatilitás | σ | Éves implikált/historikus volatilitás | 5% – 90% (Culkin) / 10% – 80% (Tidy Finance) | Uniform |
+| Lejáratig hátralévő idő | T | Években mérve | 0.005 – 2.0 év (≈ 2 nap – 2 év)               | Uniform |
+| Kockázatmentes kamatláb | r | Éves kamatláb | 0% – 5%                                       | Uniform |
+| Osztalékhozam | q | Éves osztalékhozam | 0% – 3%                                       | Uniform (opcionális paraméter) |
+| Volatilitás | σ | Éves implikált/historikus volatilitás | 5% – 90% (Culkin) / 10% – 80% (Tidy Finance)  | Uniform |
 
 ### Megjegyzések a bemeneti paraméterekhez
 
 **Moneyness (S/K arány):**
-- Reális tartomány: m ∈ [0.7, 1.3] — kizárja a mélyen out-of-the-money (OTM) és in-the-money (ITM) eseteket
+- Reális tartomány: m ∈ [0.5, 1.5] — kizárja a mélyen out-of-the-money (OTM) és in-the-money (ITM) eseteket
 - Kiterjesztett tartomány: m ∈ [0.3, 2.0] — szélesebb lefedettséghez
 
 **Részvényár eloszlása:**

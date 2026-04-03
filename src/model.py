@@ -25,14 +25,14 @@ class MLPPricer(nn.Module):
     Egyszerű többrétegű perceptron, Culkin & Das (2017) alapján.
 
     Architektúra:
-        Input(5) → Linear(5→100) → ReLU
+        Input(4) → Linear(4→100) → ReLU
                  → [Linear(100→100) → ReLU] × (n_layers - 1)
                  → Linear(100→1)
 
     Paraméterek (default): ~30 900
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 100, n_layers: int = 4):
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 100, n_layers: int = 4):
         super().__init__()
         layers = []
         in_dim = input_dim
@@ -56,14 +56,14 @@ class DeepMLPPricer(nn.Module):
     Mélyebb MLP LayerNorm-mal és Dropout-tal, Della Corte et al. (2023) alapján.
 
     Architektúra (Pre-LN stílus):
-        Input(5) → Linear(5→256)
+        Input(4) → Linear(4→256)
                  → [LayerNorm → ReLU → Dropout → Linear(256→256)] × n_layers
                  → LayerNorm → Linear(256→1)
 
     Paraméterek (default): ~265 000
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 256,
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 256,
                  n_layers: int = 4, dropout: float = 0.1):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, hidden_dim)
@@ -113,14 +113,14 @@ class ResNetPricer(nn.Module):
     Reziduális MLP BatchNorm blokkokkal, Della Corte et al. (2023) alapján.
 
     Architektúra:
-        Input(5) → Linear(5→256) → BatchNorm1d → ReLU   ← input projekció
+        Input(4) → Linear(4→256) → BatchNorm1d → ReLU   ← input projekció
                  → [ResidualBlock(256)] × n_blocks
                  → Linear(256→1)
 
     Paraméterek (default): ~400 000
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 256,
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 256,
                  n_blocks: int = 3, dropout: float = 0.1):
         super().__init__()
         self.input_proj = nn.Sequential(
@@ -168,14 +168,14 @@ class GELUResNetPricer(nn.Module):
     0-nál, szemben a ReLU-val).
 
     Architektúra (azonos ResNetPricer-rel, nn.ReLU() → nn.GELU()):
-        Input(5) → Linear(5→256) → GELU       ← input projekció
+        Input(4) → Linear(4→256) → GELU       ← input projekció
                  → [GELUResidualBlock(256)] × n_blocks
                  → LayerNorm → Linear(256→1)
 
     Paraméterek (default): ~400 000
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 256,
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 256,
                  n_blocks: int = 3, dropout: float = 0.1):
         super().__init__()
         self.input_proj = nn.Sequential(
@@ -212,10 +212,10 @@ class DenseMLPPricer(nn.Module):
 
     Előnyök: jobb gradiens-áramlás, korai rétegek direkt kapcsolódnak a kimenethez.
 
-    Paraméterek (default, input_dim=5, hidden_dim=128, n_layers=4): ~102 000
+    Paraméterek (default, input_dim=4, hidden_dim=128, n_layers=4): ~102 000
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 128,
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 128,
                  n_layers: int = 4, dropout: float = 0.1):
         super().__init__()
         self.n_layers = n_layers
@@ -273,14 +273,14 @@ class HighwayPricer(nn.Module):
     dönti el, mikor "enged át" és mikor "transzformál" (Srivastava et al. 2015).
 
     Architektúra:
-        Input(5) → Linear(5→256) → GELU
+        Input(4) → Linear(4→256) → GELU
                  → [HighwayBlock(256)] × n_blocks
                  → Linear(256→1)
 
     Paraméterek (default): ~528 000
     """
 
-    def __init__(self, input_dim: int = 5, hidden_dim: int = 256,
+    def __init__(self, input_dim: int = 4, hidden_dim: int = 256,
                  n_blocks: int = 4, dropout: float = 0.1):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, hidden_dim)
@@ -318,7 +318,7 @@ class FINNPricer(nn.Module):
     Paraméterek (default): ~402 000
     """
 
-    def __init__(self, input_dim: int = 5, approx_dim: int = 64,
+    def __init__(self, input_dim: int = 4, approx_dim: int = 64,
                  resnet_dim: int = 256, n_blocks: int = 3, dropout: float = 0.1):
         super().__init__()
 

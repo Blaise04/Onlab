@@ -22,7 +22,6 @@ Az LHS az egységkockát egyenlő valószínűségű cellákra osztja dimenziók
 | T (lejáratig hátralévő idő) | 0.005 | 2.0 | Évben kifejezve |
 | r (kockázatmentes kamatláb) | 0.00 | 0.05 | Éves |
 | sigma (volatilitás) | 0.05 | 0.90 | Éves implicit volatilitás |
-| q (osztalékhozam) | 0.00 | 0.03 | Folytonos osztalékhozam |
 
 ## Oszlopok
 
@@ -33,7 +32,6 @@ Az LHS az egységkockát egyenlő valószínűségű cellákra osztja dimenziók
 - `T` – lejáratig hátralévő idő
 - `r` – kockázatmentes kamatláb
 - `sigma` – volatilitás
-- `q` – osztalékhozam
 
 ### Célváltozók
 - `call_price` – Black-Scholes call ár
@@ -58,6 +56,6 @@ Generált eredmény: 10.4506
 ## Döntések indoklása
 
 - **LHS vs uniform**: Az LHS szisztematikusan lefedi a paraméterteret, elkerüli a klaszteresedést.
-- **LHS vs grid**: A 6 dimenziós rács 1M pontnál ~4 pont/dimenzió lenne, ami nagyon durva. Az LHS folytonos és jobb.
+- **LHS vs grid**: Az 5 dimenziós rács 1M pontnál ~4 pont/dimenzió lenne, ami nagyon durva. Az LHS folytonos és jobb.
 - **Parquet vs CSV**: 1M sornál a Parquet ~5-10x kisebb fájlméretet és gyorsabb I/O-t biztosít.
 - **Normalizáció**: A `call_price_norm` (call/K) dimenziómentes, más K értékekre is általánosítható modellt tesz lehetővé.

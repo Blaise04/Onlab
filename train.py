@@ -76,7 +76,7 @@ def set_seed(seed: int):
 
 def build_model_kwargs(args) -> dict:
     """Modell kwargs összeállítása az argumentumokból."""
-    input_dim = 6 if args.augment_put else 5
+    input_dim = 5 if args.augment_put else 4
     defaults = {
         'mlp':         {'input_dim': input_dim, 'hidden_dim': 100, 'n_layers': 4},
         'deep_mlp':    {'input_dim': input_dim, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1},

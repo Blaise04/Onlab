@@ -21,16 +21,16 @@ from src.train import (train_model, DEFAULT_FEATURE_COLS, DEFAULT_TARGET_COL)
 
 # Modellek konfigurációja: (cli_neve, model_kwargs, checkpoint_neve)
 MODEL_CONFIGS = [
-    ('mlp',         {'input_dim': 5, 'hidden_dim': 100, 'n_layers': 4},                          'mlp'),
-    ('deep_mlp',    {'input_dim': 5, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1},          'deep_mlp'),
-    ('resnet',      {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'resnet'),
-    ('gelu_resnet', {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'gelu_resnet'),
-    ('dense_mlp',   {'input_dim': 5, 'hidden_dim': 128, 'n_layers': 4, 'dropout': 0.1},          'dense_mlp'),
-    ('highway',     {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 4, 'dropout': 0.1},          'highway'),
-    ('finn',        {'input_dim': 5, 'approx_dim': 64, 'resnet_dim': 256,
+    ('mlp',         {'input_dim': 4, 'hidden_dim': 100, 'n_layers': 4},                          'mlp'),
+    ('deep_mlp',    {'input_dim': 4, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1},          'deep_mlp'),
+    ('resnet',      {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'resnet'),
+    ('gelu_resnet', {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'gelu_resnet'),
+    ('dense_mlp',   {'input_dim': 4, 'hidden_dim': 128, 'n_layers': 4, 'dropout': 0.1},          'dense_mlp'),
+    ('highway',     {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 4, 'dropout': 0.1},          'highway'),
+    ('finn',        {'input_dim': 4, 'approx_dim': 64, 'resnet_dim': 256,
                      'n_blocks': 3, 'dropout': 0.1},                                             'finn'),
     # Physics-informed resnet (azonos architektúra, physics loss-szal)
-    ('resnet',      {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'resnet_phys'),
+    ('resnet',      {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1},          'resnet_phys'),
 ]
 
 

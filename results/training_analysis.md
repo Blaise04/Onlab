@@ -2,7 +2,7 @@
 
 *Generalva: 2026-04-01 21:38*
 
-Adatok: Black-Scholes szintetikus adathalmaz, 1M minta (800K train, 100K val).  
+Adatok: Black-Scholes szintetikus adathalmaz, 1M minta (700K train, 150K val, 150K test).  
 Tanitoberendeles: CUDA GPU. Minden modell: seed=42, lr=1e-3, weight_decay=1e-4, batch=4096.  
 
 ---

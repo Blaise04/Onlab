@@ -12,10 +12,9 @@ from src.black_scholes import (
 # ── Referencia paraméterek ────────────────────────────────────────────────────
 # Culkin & Das (2017) és egyéb irodalom alapján ellenőrzött értékek
 
-ATM = dict(S=100.0, K=100.0, T=1.0, r=0.05, sigma=0.2, q=0.0)
-ITM = dict(S=110.0, K=100.0, T=1.0, r=0.05, sigma=0.2, q=0.0)
-OTM = dict(S=90.0,  K=100.0, T=1.0, r=0.05, sigma=0.2, q=0.0)
-DIV = dict(S=100.0, K=100.0, T=1.0, r=0.05, sigma=0.2, q=0.02)
+ATM = dict(S=100.0, K=100.0, T=1.0, r=0.05, sigma=0.2)
+ITM = dict(S=110.0, K=100.0, T=1.0, r=0.05, sigma=0.2)
+OTM = dict(S=90.0,  K=100.0, T=1.0, r=0.05, sigma=0.2)
 
 
 # ── Call/put ár ───────────────────────────────────────────────────────────────
@@ -47,9 +46,6 @@ class TestCallPrice:
         assert bs_call(S=110, K=100, T=1e-10, r=0.05, sigma=0.2) == pytest.approx(10.0, abs=1e-4)
         assert bs_call(S=90,  K=100, T=1e-10, r=0.05, sigma=0.2) == pytest.approx(0.0,  abs=1e-4)
 
-    def test_osztalek_csokkenti_call_arat(self):
-        assert bs_call(**DIV) < bs_call(**ATM)
-
     def test_vektorizalt(self):
         S = np.array([90.0, 100.0, 110.0])
         prices = bs_call(S, K=100, T=1, r=0.05, sigma=0.2)
@@ -71,20 +67,18 @@ class TestPutPrice:
 # ── Put-call paritás ──────────────────────────────────────────────────────────
 
 class TestPutCallParitas:
-    """C - P = S·e^(-qT) - K·e^(-rT)"""
+    """C - P = S - K·e^(-rT)  (q=0 esetén)"""
 
     def _ellenorzes(self, params):
         C = bs_call(**params)
         P = bs_put(**params)
         bal  = C - P
-        jobb = params['S'] * np.exp(-params['q'] * params['T']) \
-             - params['K'] * np.exp(-params['r'] * params['T'])
+        jobb = params['S'] - params['K'] * np.exp(-params['r'] * params['T'])
         assert bal == pytest.approx(jobb, rel=1e-6)
 
-    def test_atm(self):      self._ellenorzes(ATM)
-    def test_itm(self):      self._ellenorzes(ITM)
-    def test_otm(self):      self._ellenorzes(OTM)
-    def test_osztalek(self): self._ellenorzes(DIV)
+    def test_atm(self): self._ellenorzes(ATM)
+    def test_itm(self): self._ellenorzes(ITM)
+    def test_otm(self): self._ellenorzes(OTM)
 
     def test_vektorizalt(self):
         S = np.linspace(70, 130, 50)
@@ -99,7 +93,7 @@ class TestPutCallParitas:
 class TestDelta:
     def test_tartomany(self):
         """Call delta ∈ [0, 1]."""
-        for p in (ATM, ITM, OTM, DIV):
+        for p in (ATM, ITM, OTM):
             d = bs_delta(**p)
             assert 0.0 <= d <= 1.0
 
@@ -130,7 +124,7 @@ class TestDelta:
 class TestGamma:
     def test_nem_negativ(self):
         """Gamma ≥ 0 (call és put gammája egyenlő és nemnegatív)."""
-        for p in (ATM, ITM, OTM, DIV):
+        for p in (ATM, ITM, OTM):
             assert bs_gamma(**p) >= 0
 
     def test_deep_itm_otm_kisebb(self):
@@ -150,7 +144,7 @@ class TestGamma:
 class TestVega:
     def test_nem_negativ(self):
         """Vega ≥ 0 (magasabb volatilitás → drágább opció)."""
-        for p in (ATM, ITM, OTM, DIV):
+        for p in (ATM, ITM, OTM):
             assert bs_vega(**p) >= 0
 
     def test_atm_maximalis(self):

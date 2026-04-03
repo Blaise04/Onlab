@@ -63,19 +63,21 @@
 ---
 
 ### PINN megközelítések (2021–2023)
-- **Képviselő cikk:** Becker, Cheridito & Jentzen (2019), valamint Raissi et al. (2019) általános PINN keretrendszer
-- **Cím:** Physics-Informed Neural Networks for Option Pricing
+- **Képviselő cikk:** Raissi, Perdikaris & Karniadakis (2017/2019) általános PINN keretrendszer
+- **Cím:** Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations
 - **Architektúra:** MLP + Black-Scholes PDE veszteségfüggvény-tag (fizikai korlát)
 - **Kulcstanulság:** A BS PDE (∂C/∂t + ½σ²S²∂²C/∂S² + rS∂C/∂S − rC = 0) regularizációs tagként adható a veszteségfüggvényhez. Ez kevesebb adatból is pontos becslést tesz lehetővé, és a modell fizikailag konzisztens marad. Hátránya: a PDE-tag számítása lassabb és érzékenyebb hiperparaméterekre.
 - **Hivatkozás:** https://arxiv.org/abs/1711.10561 (általános PINN)
+- **Megjegyzés:** Becker, Cheridito & Jentzen (2019) egy különböző csoport — pl. "Deep optimal stopping" — nem azonos a PINN keretrendszerrel.
 
 ---
 
-### FINN – Financially Informed Neural Network (2024)
-- **Cím:** FINN: Financially Informed Neural Networks for Option Pricing
-- **Architektúra:** Hibrid: neurális háló + pénzügyi korlátok (pl. put-call paritás, monotonitás)
-- **Kulcstanulság:** Soft constraint-ek (büntetőtagok) formájában beépíti a no-arbitrage feltételeket. Eredmény: kevesebb adatból pontosabb és arbitrázsmentes árazás. A megközelítés különösen hasznos hiányos adatokkal (pl. illiquid opciók) dolgozva.
-- **Hivatkozás:** *(2024-es preprint, részletes hivatkozás szükséges)*
+### Liao et al. (2024) — AI Black-Scholes
+- **Szerzők:** Liao et al.
+- **Cím:** The AI Black-Scholes: Finance-Informed Neural Network for Option Pricing
+- **Architektúra:** Hibrid: neurális háló + pénzügyi korlátok (put-call paritás, monotonitás, no-arbitrage)
+- **Kulcstanulság:** Soft constraint-ek (büntetőtagok) formájában beépíti a no-arbitrage feltételeket. Kevesebb adatból pontosabb és arbitrázsmentes árazás. A megközelítés különösen hasznos hiányos adatokkal (pl. illiquid opciók) dolgozva.
+- **Hivatkozás:** https://arxiv.org/abs/2412.12213
 
 ---
 

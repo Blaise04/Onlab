@@ -19,7 +19,7 @@ A szintetikus adathalmaz előnye, hogy:
 | Kötési ár | K | Az opció lehívási ára | $7 – $650 (Culkin) / $20 – $90 (Tidy Finance) | Uniform |
 | Lejáratig hátralévő idő | T | Években mérve | 0.005 – 2.0 év (≈ 2 nap – 2 év)               | Uniform |
 | Kockázatmentes kamatláb | r | Éves kamatláb | 0% – 5%                                       | Uniform |
-| Osztalékhozam | q | Éves osztalékhozam | 0% – 3%                                       | Uniform (opcionális paraméter) |
+| Osztalékhozam | q | Éves osztalékhozam | 0% (rögzített)                                | — (q=0 feltételezés) |
 | Volatilitás | σ | Éves implikált/historikus volatilitás | 5% – 90% (Culkin) / 10% – 80% (Tidy Finance)  | Uniform |
 
 ### Megjegyzések a bemeneti paraméterekhez
@@ -143,7 +143,7 @@ Minden bemeneti paramétert [0, 1] vagy [-1, 1] intervallumra normalizálni (min
 
 | Tanulmány | Adathalmaz mérete | S tartomány | K tartomány | T tartomány | r tartomány | σ tartomány | Eloszlás | Zaj |
 |---|---|---|---|---|---|---|---|---|
-| Culkin & Das (2017) | 300 000 | $10–$50 | $7–$650 | 1 nap–3 év | 1%–3% | 5%–90% | Nem normális | Nincs |
+| Culkin & Das (2017) | 300 000 | $10–$50 | $7–$650 | 1 nap–3 év | 1%–3% | 5%–90% | Uniform | Nincs |
 | Tidy Finance (Python) | ~1 500 000 | $40–$60 | $20–$90 | 3 hó–2 év | 0%–5% | 10%–80% | Grid | N(0, 0.15) |
 | PINN (2312.06711) | — | [0, 160] | 40 (fix) | [0, 1] év | 0.05 (fix) | 0.2 (fix) | Folytonos | Nincs |
 | FINN / AI BS (2412.12213) | — | GBM szimulált | Uniform | Uniform | 0% | — | Log-normális + Uniform | Nincs |

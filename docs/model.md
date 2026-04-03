@@ -26,7 +26,7 @@ call opció árakat becsülnek. Az architektúrák két generációban épülnek
 
 ## 2. Bemeneti / kimeneti reprezentáció
 
-### Bemeneti feature-ök (5 db, már [0,1]-re skálázva)
+### Bemeneti feature-ök (4 db, már [0,1]-re skálázva)
 
 | Oszlop           | Leírás                         | Tartomány (eredeti) |
 |------------------|--------------------------------|---------------------|
@@ -34,7 +34,6 @@ call opció árakat becsülnek. Az architektúrák két generációban épülnek
 | `T_norm`         | Lejáratig hátralévő idő        | [0.005, 2.0] év     |
 | `r_norm`         | Kockázatmentes ráta            | [0.0, 0.05]         |
 | `sigma_norm`     | Volatilitás                    | [0.05, 0.90]        |
-| `q_norm`         | Osztalékhozam                  | [0.0, 0.03]         |
 
 ### Kimenet
 
@@ -49,8 +48,8 @@ C(S, K, T, r, σ) = K · f(S/K, T, r, σ), ezért a háló könnyebben általán
 ### 3.1 MLPPricer — Culkin & Das (2017) baseline
 
 ```
-Input(5)
-  → Linear(5 → 100) → ReLU
+Input(4)
+  → Linear(4 → 100) → ReLU
   → Linear(100 → 100) → ReLU   ┐
   → Linear(100 → 100) → ReLU   │  3 rejtett réteg
   → Linear(100 → 100) → ReLU   ┘
@@ -58,26 +57,26 @@ Input(5)
 ```
 
 - Nincs normalizáció, nincs Dropout — hűen követi az eredeti cikket
-- `MLPPricer(input_dim=5, hidden_dim=100, n_layers=4)`
+- `MLPPricer(input_dim=4, hidden_dim=100, n_layers=4)`
 
 ### 3.2 DeepMLPPricer — Della Corte et al. (2023) javított MLP
 
 ```
-Input(5)
-  → Linear(5 → 256)
+Input(4)
+  → Linear(4 → 256)
   → [LayerNorm → ReLU → Dropout(0.1) → Linear(256 → 256)] × 4
   → LayerNorm
   → Linear(256 → 1)
 ```
 
 - Pre-LN stílus: normalizáció a nemlinearitás előtt (stabilabb gradiens)
-- `DeepMLPPricer(input_dim=5, hidden_dim=256, n_layers=4, dropout=0.1)`
+- `DeepMLPPricer(input_dim=4, hidden_dim=256, n_layers=4, dropout=0.1)`
 
 ### 3.3 ResNetPricer — Della Corte et al. (2023) reziduális MLP
 
 ```
-Input(5)
-  → Linear(5 → 256) → BatchNorm1d → ReLU   ← input projekció
+Input(4)
+  → Linear(4 → 256) → BatchNorm1d → ReLU   ← input projekció
   → [ResidualBlock(256)] × 3
   → Linear(256 → 1)
 ```
@@ -88,13 +87,13 @@ x → Linear(dim→dim) → BatchNorm1d → ReLU → Dropout(0.1) → Linear(dim
 ```
 
 - Post-BN reziduális kapcsolat (nincs projekciós réteg: dim_in == dim_out)
-- `ResNetPricer(input_dim=5, hidden_dim=256, n_blocks=3, dropout=0.1)`
+- `ResNetPricer(input_dim=4, hidden_dim=256, n_blocks=3, dropout=0.1)`
 
 ### 3.4 GELUResNetPricer — ResNet GELU aktivációval
 
 ```
-Input(5)
-  → Linear(5 → 256) → GELU              ← input projekció
+Input(4)
+  → Linear(4 → 256) → GELU              ← input projekció
   → [GELUResidualBlock(256)] × 3
   → LayerNorm
   → Linear(256 → 1)
@@ -107,7 +106,7 @@ x → LayerNorm → Linear(dim→dim) → GELU → Dropout(0.1) → Linear(dim�
 
 - Azonos struktúra mint ResNetPricer, ReLU → GELU csere
 - Motiváció: a BS árak simák, GELU simább gradienst biztosít (nincs "törött" derivált 0-nál)
-- `GELUResNetPricer(input_dim=5, hidden_dim=256, n_blocks=3, dropout=0.1)`
+- `GELUResNetPricer(input_dim=4, hidden_dim=256, n_blocks=3, dropout=0.1)`
 
 ---
 
@@ -124,7 +123,7 @@ output = W_out·[x, h₁, h₂, h₃, h₄]
 - Minden réteg az összes korábbi kimenetét kapja → jobb gradiens-áramlás
 - Korai rétegek direkt kapcsolódnak a kimenethez ("feature reuse")
 - Kisebb hidden_dim (128) is elegendő, mert a dense skip-ek gazdagítják a reprezentációt
-- `DenseMLPPricer(input_dim=5, hidden_dim=128, n_layers=4, dropout=0.1)`
+- `DenseMLPPricer(input_dim=4, hidden_dim=128, n_layers=4, dropout=0.1)`
 - Irodalom: Huang et al. (2017) — *Densely Connected Convolutional Networks*
 
 ---
@@ -132,8 +131,8 @@ output = W_out·[x, h₁, h₂, h₃, h₄]
 ### 3.6 HighwayPricer — tanulható gating
 
 ```
-Input(5)
-  → Linear(5 → 256) → GELU
+Input(4)
+  → Linear(4 → 256) → GELU
   → [HighwayBlock(256)] × 4
   → Linear(256 → 1)
 ```
@@ -147,7 +146,7 @@ y = H·T + x·(1 − T)          ← gated output
 
 - A skip arány nem rögzített (mint ResNetben), hanem tanult
 - Gate bias −1-re inicializálva: kezdetben inkább "carry" (skip), majd tanul
-- `HighwayPricer(input_dim=5, hidden_dim=256, n_blocks=4, dropout=0.1)`
+- `HighwayPricer(input_dim=4, hidden_dim=256, n_blocks=4, dropout=0.1)`
 - Irodalom: Srivastava et al. (2015) — *Training Very Deep Networks*
 
 ---
@@ -155,8 +154,8 @@ y = H·T + x·(1 − T)          ← gated output
 ### 3.7 FINNPricer — Finance-Informed Neural Network
 
 ```
-Ág 1 (approx):     x → [Linear(5→64) → GELU] × 2 → Linear(64→1) → BS̃
-Ág 2 (correction): x → Linear(5→256) → GELU
+Ág 1 (approx):     x → [Linear(4→64) → GELU] × 2 → Linear(64→1) → BS̃
+Ág 2 (correction): x → Linear(4→256) → GELU
                      → [GELUResidualBlock(256)] × 3
                      → LayerNorm → Linear(256→1)   → δ
 Output: BS̃ + δ
@@ -165,8 +164,8 @@ Output: BS̃ + δ
 - Az approx ág a "könnyű" eseteket közelíti (ITM opciók)
 - A correction ág a nehéz eseteket korrigálja (mélyen OTM, rövid lejárat)
 - Akadémiailag a legtartalmasabb: a két ág külön szerepet kap
-- `FINNPricer(input_dim=5, approx_dim=64, resnet_dim=256, n_blocks=3, dropout=0.1)`
-- Irodalom: Liu et al. (2019) — *A neural network-based framework for financial model calibration*;
+- `FINNPricer(input_dim=4, approx_dim=64, resnet_dim=256, n_blocks=3, dropout=0.1)`
+- Irodalom: Liu et al. (2019) — *Pricing options and computing implied volatilities using neural networks*;
   arXiv:2412.12213 — *AI Black-Scholes*
 
 ---
@@ -593,7 +592,7 @@ megközelítés érdemes a 2. fázisban (historikus adatok) is megvizsgálni.
   Tanulható transform gate-tel (σ-függvény) irányítja az információáramlást;
   a háló maga dönti el, mikor "enged át" és mikor "transzformál".
 
-- **Liu et al. (2019)** — *A neural network-based framework for financial model calibration*.
+- **Liu et al. (2019)** — *Pricing options and computing implied volatilities using neural networks*.
   Fizikai korlátokat (görögök) épít be a tanítási veszteségfüggvénybe;
   a delta-korlát physics-informed loss alapját adja.
 

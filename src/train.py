@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from src.model import get_model, count_parameters
 
-DEFAULT_FEATURE_COLS = ['moneyness_norm', 'T_norm', 'r_norm', 'sigma_norm', 'q_norm']
+DEFAULT_FEATURE_COLS = ['moneyness_norm', 'T_norm', 'r_norm', 'sigma_norm']
 DEFAULT_TARGET_COL = 'call_price_norm'
 
 # Put-call augmentált feature lista (is_put bináris jelző hozzáadva)
@@ -61,12 +61,12 @@ class AugmentedOptionDataset(Dataset):
     """
     Put-call paritással augmentált adathalmaz.
 
-    Minden call mintához hozzáad egy put mintát: P = C - S·e^(-qT) + K·e^(-rT),
-    ami normalizálva: put_norm = call_norm - moneyness·e^(-qT) + e^(-rT).
+    Minden call mintához hozzáad egy put mintát: P = C - S + K·e^(-rT),
+    ami normalizálva (q=0): put_norm = call_norm - moneyness + e^(-rT).
     Az is_put bináris feature (0=call, 1=put) különbözteti meg az opció típusát,
     így az effektív adathalmaz kétszeres méretű extra fájl nélkül.
 
-    Features: [moneyness_norm, T_norm, r_norm, sigma_norm, q_norm, is_put]  (6 db)
+    Features: [moneyness_norm, T_norm, r_norm, sigma_norm, is_put]  (5 db)
     Target  : opció ára / K  (call_price_norm ill. put_price_norm)
     """
 
@@ -82,18 +82,17 @@ class AugmentedOptionDataset(Dataset):
         # Betöltjük a normalizált paramétereket és az árakat is
         # Az is_put szintetikus — kizárjuk a parquet-olvasásból
         base_feature_cols = [c for c in feature_cols if c != 'is_put']
-        raw_cols = ['moneyness', 'T', 'r', 'q']
+        raw_cols = ['moneyness', 'T', 'r']
         df = pd.read_parquet(path, columns=base_feature_cols + [target_col] + raw_cols)
 
-        X_base = df[base_feature_cols].values.astype(np.float32)   # (N, 5)
+        X_base = df[base_feature_cols].values.astype(np.float32)   # (N, 4)
         y_call = df[target_col].values.astype(np.float32)     # (N,) call_price_norm
 
-        # Put ár normalizálva: P/K = C/K - moneyness·e^(-qT) + e^(-rT)
+        # Put ár normalizálva (q=0): P/K = C/K - moneyness + e^(-rT)
         m  = df['moneyness'].values
         T  = df['T'].values
         r  = df['r'].values
-        q  = df['q'].values
-        y_put = (y_call - m * np.exp(-q * T) + np.exp(-r * T)).astype(np.float32)
+        y_put = (y_call - m + np.exp(-r * T)).astype(np.float32)
 
         n = len(df)
         # Call: is_put = 0;  Put: is_put = 1

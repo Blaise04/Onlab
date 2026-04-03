@@ -30,13 +30,13 @@ PLOTS_DIR   = os.path.join(RESULTS_DIR, "plots")
 
 # Modellek konfiguracioja (architekturak valtozatlanul hagyva)
 MODEL_CONFIGS = [
-    ('mlp',         {'input_dim': 5, 'hidden_dim': 100, 'n_layers': 4},                 'MLPPricer'),
-    ('deep_mlp',    {'input_dim': 5, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1}, 'DeepMLPPricer'),
-    ('resnet',      {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1}, 'ResNetPricer'),
-    ('gelu_resnet', {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1}, 'GELUResNetPricer'),
-    ('dense_mlp',   {'input_dim': 5, 'hidden_dim': 128, 'n_layers': 4, 'dropout': 0.1}, 'DenseMLPPricer'),
-    ('highway',     {'input_dim': 5, 'hidden_dim': 256, 'n_blocks': 4, 'dropout': 0.1}, 'HighwayPricer'),
-    ('finn',        {'input_dim': 5, 'approx_dim': 64, 'resnet_dim': 256,
+    ('mlp',         {'input_dim': 4, 'hidden_dim': 100, 'n_layers': 4},                 'MLPPricer'),
+    ('deep_mlp',    {'input_dim': 4, 'hidden_dim': 256, 'n_layers': 4, 'dropout': 0.1}, 'DeepMLPPricer'),
+    ('resnet',      {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1}, 'ResNetPricer'),
+    ('gelu_resnet', {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 3, 'dropout': 0.1}, 'GELUResNetPricer'),
+    ('dense_mlp',   {'input_dim': 4, 'hidden_dim': 128, 'n_layers': 4, 'dropout': 0.1}, 'DenseMLPPricer'),
+    ('highway',     {'input_dim': 4, 'hidden_dim': 256, 'n_blocks': 4, 'dropout': 0.1}, 'HighwayPricer'),
+    ('finn',        {'input_dim': 4, 'approx_dim': 64, 'resnet_dim': 256,
                      'n_blocks': 3, 'dropout': 0.1},                                    'FINNPricer'),
 ]
 

@@ -59,7 +59,6 @@ A mintavételezett paraméterek és levezetett értékek:
 | T | 0.005 | 2.0 | mintavételezett | Lejáratig hátralévő idő (év) |
 | r | 0.00 | 0.05 | mintavételezett | Kockázatmentes kamatláb |
 | sigma | 0.05 | 0.90 | mintavételezett | Volatilitás |
-| q | 0.00 | 0.03 | mintavételezett | Folyamatos osztalékhozam |
 | K | — | — | levezetett | K = S / moneyness |
 
 **Megjegyzés:** K-t nem mintavételezzük közvetlenül — S és moneyness alapján számítjuk ki (`K = S / moneyness`), így garantált, hogy minden minta realisztikus moneyness tartományban marad.

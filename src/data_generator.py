@@ -19,10 +19,9 @@ DEFAULT_PARAMS = {
     'T':         (0.005,  2.0),
     'r':         (0.00,  0.05),
     'sigma':     (0.05,  0.90),
-    'q':         (0.00,  0.03),
 }
 
-PARAM_NAMES = ['S', 'moneyness', 'T', 'r', 'sigma', 'q']
+PARAM_NAMES = ['S', 'moneyness', 'T', 'r', 'sigma']
 
 
 def _sample_uniform(n: int, rng: np.random.Generator) -> np.ndarray:
@@ -92,11 +91,11 @@ def generate_dataset(
     else:
         raise ValueError(f"Ismeretlen mintavételezési módszer: '{method}'. Válasszon: uniform, lhs, grid")
 
-    S, moneyness, T, r, sigma, q = (samples[:, i] for i in range(len(PARAM_NAMES)))
+    S, moneyness, T, r, sigma = (samples[:, i] for i in range(len(PARAM_NAMES)))
     K = S / moneyness
 
-    call_price = bs_call(S, K, T, r, sigma, q)
-    put_price  = bs_put(S, K, T, r, sigma, q)
+    call_price = bs_call(S, K, T, r, sigma)
+    put_price  = bs_put(S, K, T, r, sigma)
 
     if noise_std > 0.0:
         call_price += rng.normal(0.0, noise_std, size=call_price.shape)
@@ -106,17 +105,17 @@ def generate_dataset(
 
     data = {
         'moneyness': moneyness,
-        'S': S, 'K': K, 'T': T, 'r': r, 'sigma': sigma, 'q': q,
+        'S': S, 'K': K, 'T': T, 'r': r, 'sigma': sigma,
         'call_price': call_price,
         'put_price':  put_price,
     }
 
     if include_greeks:
-        data['delta'] = bs_delta(S, K, T, r, sigma, q)
-        data['gamma'] = bs_gamma(S, K, T, r, sigma, q)
-        data['vega']  = bs_vega(S, K, T, r, sigma, q)
-        data['theta'] = bs_theta(S, K, T, r, sigma, q)
-        data['rho']   = bs_rho(S, K, T, r, sigma, q)
+        data['delta'] = bs_delta(S, K, T, r, sigma)
+        data['gamma'] = bs_gamma(S, K, T, r, sigma)
+        data['vega']  = bs_vega(S, K, T, r, sigma)
+        data['theta'] = bs_theta(S, K, T, r, sigma)
+        data['rho']   = bs_rho(S, K, T, r, sigma)
 
     if normalize:
         data['call_price_norm'] = call_price / K

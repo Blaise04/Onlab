@@ -19,7 +19,6 @@ A szintetikus adathalmaz előnye, hogy:
 | Kötési ár | K | Az opció lehívási ára | $7 – $650 (Culkin) / $20 – $90 (Tidy Finance) | Uniform |
 | Lejáratig hátralévő idő | T | Években mérve | 0.005 – 2.0 év (≈ 2 nap – 2 év)               | Uniform |
 | Kockázatmentes kamatláb | r | Éves kamatláb | 0% – 5%                                       | Uniform |
-| Osztalékhozam | q | Éves osztalékhozam | 0% (rögzített)                                | — (q=0 feltételezés) |
 | Volatilitás | σ | Éves implikált/historikus volatilitás | 5% – 90% (Culkin) / 10% – 80% (Tidy Finance)  | Uniform |
 
 ### Megjegyzések a bemeneti paraméterekhez
@@ -40,15 +39,15 @@ A szintetikus adathalmaz előnye, hogy:
 
 ## 3. Kimeneti paraméterek
 
-| Kimenet | Szimbólum | Leírás | Megjegyzés |
-|---|---|---|---|
-| Call opció ára | C | Európai call opció Black-Scholes ára | Legelterjedtebb kimenet |
+| Kimenet | Szimbólum | Leírás | Megjegyzés                            |
+|---|---|---|---------------------------------------|
+| Call opció ára | C | Európai call opció Black-Scholes ára | Legelterjedtebb kimenet               |
 | Put opció ára | P | Európai put opció ára | Put-call paritással levezethető C-ből |
-| Delta | Δ | ∂C/∂S — az opció ára változása az alaptermék árának egységnyi változására | Görög, ritkábban |
-| Gamma | Γ | ∂²C/∂S² — a delta konvexitása | Görög, ritkábban |
-| Vega | ν | ∂C/∂σ — érzékenység a volatilitásra | Görög, ritkábban |
-| Theta | Θ | ∂C/∂T — időérték-csökkenés | Görög, ritkábban |
-| Rho | ρ | ∂C/∂r — kamatérzékenység | Görög, ritkábban |
+| Delta | Δ | ∂C/∂S — az opció ára változása az alaptermék árának egységnyi változására | Görög, opcionális                     |
+| Gamma | Γ | ∂²C/∂S² — a delta konvexitása | Görög, opcionális                      |
+| Vega | ν | ∂C/∂σ — érzékenység a volatilitásra | Görög, opcionális                      |
+| Theta | Θ | ∂C/∂T — időérték-csökkenés | Görög, opcionális                      |
+| Rho | ρ | ∂C/∂r — kamatérzékenység | Görög, opcionális                      |
 
 A legtöbb tanulmány kizárólag a **call opció árát** (C) használja kimenetként. A görögök tanítása külön modellt vagy multi-output architektúrát igényel.
 
@@ -162,7 +161,6 @@ Az alábbi beállítás kiindulópontként ajánlott:
 | T | [0.005, 2.0] év | mintavételezett | Uniform |
 | r | [0.00, 0.05] | mintavételezett | Uniform |
 | σ | [0.05, 0.90] | mintavételezett | Uniform |
-| q | [0.00, 0.03] | mintavételezett | Uniform |
 | **Kimenet: C, P** | BS-képlettel számítva | — | — |
 
 **Megjegyzés a K generáláshoz:** S és moneyness mintavételezésével, majd K = S / moneyness levezetésével garantálható, hogy minden minta realisztikus moneyness tartományban legyen. A K közvetlen mintavételezése S-től függetlenül sok irreális mélyen OTM/ITM kombinációt eredményezne.

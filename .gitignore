@@ -4,6 +4,9 @@ data/
 # Lokális promptok
 prompts/
 
+# Mások önlab beszámolói
+Mások önlab beszámolói/
+
 # Claude Code belső mappája
 .claude/
 
@@ -17,3 +20,4 @@ venv/
 # IDE
 .idea/
 *.iml
+

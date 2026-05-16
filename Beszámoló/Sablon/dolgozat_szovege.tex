@@ -175,13 +175,13 @@ kísérleti jellegű változat (lásd a \ref{tab:architectures}.~táblázatot).
 \toprule
 Modell & Típus & Kulcsjellemzők & Param. & Aktiv. \\
 \midrule
-MLPPricer      & Alap MLP         & 4 réteg $\times$ 100 neuron, nincs norm.     &  31\,001 & ReLU \\
-DeepMLPPricer  & Mélyebb MLP      & 4$\times$256, LayerNorm, Dropout(0{,}1)       & 267\,521 & ReLU \\
-ResNetPricer   & Reziduális MLP   & 3 ResBlock, BatchNorm                         & 398\,593 & ReLU \\
-GELUResNetPricer & Reziduális MLP & 3 GELUResBlock, LayerNorm                     & 398\,593 & GELU \\
-DenseMLPPricer & DenseNet-stílus  & 4 réteg, sűrű összefűzés, 128 dim             & 101\,894 & GELU \\
-HighwayPricer  & Highway-gating   & 4 blokk, tanult kapu                          & 528\,129 & GELU \\
-FINNPricer     & Kétágú FINN      & Közelítő ág + korrekciós ResNet               & 403\,202 & GELU \\
+MLPPricer      & Alap MLP         & 4 réteg $\times$ 100 neuron, nincs norm.     &  30\,901 & ReLU \\
+DeepMLPPricer  & Mélyebb MLP      & 4$\times$256, LayerNorm, Dropout(0{,}1)       & 267\,265 & ReLU \\
+ResNetPricer   & Reziduális MLP   & 3 ResBlock, BatchNorm                         & 399\,873 & ReLU \\
+GELUResNetPricer & Reziduális MLP & 3 GELUResBlock, LayerNorm                     & 398\,337 & GELU \\
+DenseMLPPricer & DenseNet-stílus  & 4 réteg, sűrű összefűzés, 128 dim             & 101\,381 & GELU \\
+HighwayPricer  & Highway-gating   & 4 blokk, tanult kapu                          & 527\,873 & GELU \\
+FINNPricer     & Kétágú FINN      & Közelítő ág + korrekciós ResNet               & 402\,882 & GELU \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -270,13 +270,13 @@ ITM~$m > 1{,}1$.
 \toprule
 Modell & Param. & Best ep. & Val~MSE~($\times10^{-5}$) & RMSE & MAE & $R^2$ \\
 \midrule
-\textbf{MLPPricer}   &  31\,001 & 68 & \textbf{2{,}13}  & \textbf{0{,}004612} & \textbf{0{,}002780} & \textbf{0{,}999407} \\
-ResNetPricer          & 398\,593 & 80 & 2{,}28           & 0{,}004788          & 0{,}003274          & 0{,}999361 \\
-GELUResNetPricer      & 398\,593 & 40 & 8{,}28           & 0{,}009135          & 0{,}006027          & 0{,}997673 \\
-FINNPricer            & 403\,202 & 17 & 9{,}23           & 0{,}009653          & 0{,}006625          & 0{,}997401 \\
-DenseMLPPricer        & 101\,894 & 18 & 22{,}80          & 0{,}015172          & 0{,}010694          & 0{,}993581 \\
-HighwayPricer         & 528\,129 & 22 & 23{,}20          & 0{,}015281          & 0{,}011005          & 0{,}993488 \\
-DeepMLPPricer         & 267\,521 &  4 & 27{,}40          & 0{,}016575          & 0{,}013233          & 0{,}992338 \\
+\textbf{MLPPricer}   &  30\,901 & 123 & \textbf{2{,}06}  & \textbf{0{,}004602} & \textbf{0{,}002788} & \textbf{0{,}999449} \\
+DeepMLPPricer         & 267\,265 &  27 & 3{,}63           & 0{,}006061          & 0{,}004351          & 0{,}999044 \\
+ResNetPricer          & 399\,873 &  28 & 3{,}85           & 0{,}006217          & 0{,}004772          & 0{,}998994 \\
+FINNPricer            & 402\,882 &  21 & 8{,}24           & 0{,}009143          & 0{,}006134          & 0{,}997824 \\
+GELUResNetPricer      & 398\,337 &  31 & 8{,}50           & 0{,}009293          & 0{,}006248          & 0{,}997752 \\
+HighwayPricer         & 527\,873 &   9 & 21{,}95          & 0{,}014884          & 0{,}010581          & 0{,}994234 \\
+DenseMLPPricer        & 101\,381 &   5 & 32{,}28          & 0{,}018042          & 0{,}013094          & 0{,}991528 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -291,28 +291,30 @@ DeepMLPPricer         & 267\,521 &  4 & 27{,}40          & 0{,}016575          &
 \toprule
 Modell & OTM ($m<0{,}9$) & ATM ($0{,}9$--$1{,}1$) & ITM ($m>1{,}1$) & Max.~hiba \\
 \midrule
-\textbf{MLPPricer}  & \textbf{0{,}002933} & \textbf{0{,}005903} & 0{,}005214          & 0{,}076284 \\
-ResNetPricer         & 0{,}004429          & 0{,}005342          & \textbf{0{,}004842} & \textbf{0{,}065314} \\
-GELUResNetPricer     & 0{,}008078          & 0{,}011879          & 0{,}008536          & 0{,}105482 \\
-FINNPricer           & 0{,}008649          & 0{,}012113          & 0{,}009211          & 0{,}105467 \\
-DenseMLPPricer       & 0{,}011125          & 0{,}018354          & 0{,}016836          & 0{,}115152 \\
-HighwayPricer        & 0{,}011821          & 0{,}020864          & 0{,}015054          & 0{,}115609 \\
-DeepMLPPricer        & 0{,}013577          & 0{,}013992          & 0{,}020115          & 0{,}103493 \\
+\textbf{MLPPricer}  & \textbf{0{,}002957} & 0{,}006000          & 0{,}005117          & 0{,}081690 \\
+DeepMLPPricer        & 0{,}005150          & \textbf{0{,}005218} & 0{,}007194          & 0{,}071471 \\
+ResNetPricer         & 0{,}006604          & 0{,}007138          & \textbf{0{,}005241} & \textbf{0{,}062778} \\
+FINNPricer           & 0{,}008113          & 0{,}011816          & 0{,}008555          & 0{,}095968 \\
+GELUResNetPricer     & 0{,}008409          & 0{,}011565          & 0{,}008843          & 0{,}097218 \\
+HighwayPricer        & 0{,}011428          & 0{,}019678          & 0{,}015142          & 0{,}122766 \\
+DenseMLPPricer       & 0{,}012403          & 0{,}022329          & 0{,}020260          & 0{,}135075 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 A legszembetűnőbb eredmény az MLPPricer fölénye: a legkisebb paraméterszámmal
-(31\,001) érte el a legjobb összesített RMSE-t (0{,}004612) és $R^2$-t (0{,}999407).
-A ResNetPricer (398\,593 paraméter) mindössze 3{,}8\%-kal gyengébb RMSE-vel zárt
-($R^2 = 0{,}9994$), de közel 13-szoros paramétertöbbleggel.
+(30\,901) érte el a legjobb összesített RMSE-t (0{,}004602) és $R^2$-t (0{,}999449).
+A második legjobb a DeepMLPPricer (267\,265 paraméter, RMSE\,=\,0{,}006061),
+amelyet szorosan követ a ResNetPricer (399\,873 paraméter, RMSE\,=\,0{,}006217).
 Ez arra utal, hogy a Black--Scholes-függvény inherensen sima és kis hálóval is
 jól approximálható, feltéve, hogy elegendő ideig tanítják.
-Az MLPPricer 68 epochon át tanult, míg a bonyolultabb modellek jellemzően
-4--40 epochnál megálltak (early stopping).
+Az MLPPricer 123 epochon át tanult, míg a bonyolultabb modellek jellemzően
+5--31 epochnál megálltak (early stopping).
 
-A szegmentált elemzés szerint az MLPPricer OTM és ATM tartományban a legjobb,
-míg a ResNetPricer ITM szegmensben vezet (RMSE\,=\,0{,}004842).
+A szegmentált elemzés szerint az MLPPricer OTM tartományban a legjobb
+(RMSE\,=\,0{,}002957), a DeepMLPPricer ATM szegmensben vezet (RMSE\,=\,0{,}005218),
+míg a ResNetPricer ITM szegmensben és maximális hiba tekintetében a legjobb
+(RMSE\,=\,0{,}005241, max\,=\,0{,}062778).
 
 \begin{figure}[H]
     \centering
@@ -340,8 +342,8 @@ míg a ResNetPricer ITM szegmensben vezet (RMSE\,=\,0{,}004842).
 A kísérlet során hét neurális háló architektúrát hasonlítottunk össze
 szintetikus Black--Scholes adatokon alapuló európai call opció árazási feladaton.
 A legmeglepőbb eredmény az MLPPricer győzelme: a Culkin és Das \cite{culkin2017}
-nyomán implementált, mindössze 31\,001 paraméterű egyszerű MLP érte el a legjobb
-teszthalmaz-RMSE-t (0{,}004612) és $R^2$ értéket (0{,}999407).
+nyomán implementált, mindössze 30\,901 paraméterű egyszerű MLP érte el a legjobb
+teszthalmaz-RMSE-t (0{,}004602) és $R^2$ értéket (0{,}999449).
 Ez megerősíti, hogy a Black--Scholes-árazási függvény inherensen sima, és kis,
 egyszerű hálókkal kellő pontossággal approximálható -- feltéve, hogy elegendő
 ideig, megfelelő LR-ütemezéssel tanítják őket.
@@ -350,8 +352,8 @@ ideig, megfelelő LR-ütemezéssel tanítják őket.
 A kísérlet kizárólag szintetikus Black--Scholes adatokon alapul, amelyek nem
 tükrözik a valódi piaci jelenségeket (volatility smile, bid-ask spread,
 likviditási hatások).
-Az egyenlőtlen tanítási hossz -- az MLPPricer 68 epochon, a DeepMLPPricer
-mindössze 4 epochon tanult -- elfogultságot vihet az összehasonlításba.
+Az egyenlőtlen tanítási hossz -- az MLPPricer 123 epochon, a DeepMLPPricer
+27 epochon tanult -- elfogultságot vihet az összehasonlításba.
 A ResNet-variánsok BatchNorm/LayerNorm és ReLU/GELU különbsége nehezíti
 az egyes tényezők elkülönítését.
 

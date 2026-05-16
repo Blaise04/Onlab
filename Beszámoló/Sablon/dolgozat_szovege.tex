@@ -352,8 +352,9 @@ ideig, megfelelő LR-ütemezéssel tanítják őket.
 A kísérlet kizárólag szintetikus Black--Scholes adatokon alapul, amelyek nem
 tükrözik a valódi piaci jelenségeket (volatility smile, bid-ask spread,
 likviditási hatások).
-Az egyenlőtlen tanítási hossz -- az MLPPricer 123 epochon, a DeepMLPPricer
-27 epochon tanult -- elfogultságot vihet az összehasonlításba.
+Az egyenlőtlen tanítási hossz -- az MLPPricer összesen 134 epochon tanult
+(legjobb checkpoint: 123. epoch), míg a DeepMLPPricer csupán 37 epochon
+(legjobb checkpoint: 27. epoch) -- elfogultságot vihet az összehasonlításba.
 A ResNet-variánsok BatchNorm/LayerNorm és ReLU/GELU különbsége nehezíti
 az egyes tényezők elkülönítését.
 

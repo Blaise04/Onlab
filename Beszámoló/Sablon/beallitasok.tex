@@ -1,0 +1,30 @@
+% Ez a fájl felelős azért, hogy a projekt fájljait összefűzze egy kimeneti pdf-fé.
+
+% Ezeket írd át...
+\def\tipus{Önálló laboratórium}
+\def\nev{Arató Balázs}
+\def\kepzes{Mérnökinformatikus BSc}
+\def\cim{Pénzügyi opciók árazása a mesterséges intelligencia eszközeivel}
+\def\temavezetok{Témavezető: Dr.\ Fogarasi Norbert}
+
+% címlap generálása
+\cimlap
+\clearpage
+% tartalomjegyzék
+\tableofcontents
+\thispagestyle{empty}
+% következő oldal és oldalszámozás
+\clearpage
+\pagenumbering{arabic}
+
+% Tartalmi részek - módosítsd nyugodtan
+\input{dolgozat_szovege.tex}
+
+% Hivatkozásjegyzék/bibliográfia
+\printbibliography
+
+% Mellékletek - ha van melléklet,
+% akkor vedd ki a kommentet az alábbi két sor elől:
+
+% \appendix
+% \input{melleklet.tex}

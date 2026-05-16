@@ -1,0 +1,362 @@
+%% ============================================================
+%%  A FELADAT ISMERTETÉSE
+%% ============================================================
+\section{A feladat ismertetése}
+
+A pénzügyi piacok egyik alapvető kihívása az opciók igazságos értékének meghatározása.
+A klasszikus Black--Scholes-modell \cite{blackscholes1973} zárt képletet ad az európai
+típusú opciók árazásához, ám egyszerűsítő feltételezéseitől -- konstans volatilitás,
+log-normális részvényár-eloszlás, tranzakciós költségek és osztalékfizetések hiánya --
+a valóság számos ponton eltér.
+Ez motiválja az adatvezérelt, gépi tanulási megközelítések alkalmazását az opciós
+árazás területén: egy kellőképpen betanított neurális háló közelítheti a modell által
+leírt árazási függvényt, és megfelelő architektúrával az egyszerűsítő feltételeken
+\textit{túl} is általánosíthat.
+
+Jelen önálló laboratóriumi munka céljai:
+
+\begin{itemize}
+    \item Szintetikus, 1\,000\,000 mintából álló adathalmaz előállítása
+          latin hiperkocka mintavételezéssel, amely lefedi az európai call opciók
+          paramétertartományát.
+    \item Hét különböző neurális háló architektúra -- alap MLP, mély MLP, ResNet,
+          GELU-ResNet, DenseNet-stílusú háló, Highway-hálózat és kétágú
+          FINN -- implementálása és betanítása egységes feltételek mellett.
+    \item Az architektúrák szisztematikus összehasonlítása teszt-RMSE, MAE,
+          $R^2$ és moneyness-szegmensenként mért hibák alapján.
+\end{itemize}
+
+A projekt jelen, első fázisa kizárólag szintetikus Black--Scholes-adatokon
+alapul ($q = 0$, azaz osztalékfizetés nélkül).
+A tervezett második fázisban historikus piaci adatok bevonása és a volatility
+smile jelenségének modellezése szerepel.
+
+
+%% ============================================================
+%%  BEVEZETÉS
+%% ============================================================
+\section{Bevezetés}
+
+\subsection{A Black--Scholes-modell}
+
+A Black--Scholes-modell \cite{blackscholes1973} zárt formulát ad az európai
+típusú vételi (call) opció fair értékére, feltéve, hogy az alaptermék ára
+geometriai Brown-mozgást követ, a kamatláb és a volatilitás konstansak,
+és nincsenek tranzakciós költségek.
+Osztalékfizetés nélkül ($q = 0$) az elméleti call-ár:
+
+\begin{equation}
+    C = S\,\Phi(d_1) - K\,e^{-rT}\,\Phi(d_2), \label{eq:call}
+\end{equation}
+
+ahol
+
+\begin{align}
+    d_1 &= \frac{\ln(S/K) + \bigl(r + \tfrac{1}{2}\sigma^2\bigr)T}{\sigma\sqrt{T}},
+    \qquad
+    d_2 = d_1 - \sigma\sqrt{T}. \label{eq:d1d2}
+\end{align}
+
+$S$ az alaptermék azonnali ára, $K$ a kötési ár, $T$ a lejáratig hátralévő idő
+(évben), $r$ a kockázatmentes kamatláb, $\sigma$ az éves volatilitás, $\Phi(\cdot)$
+a standard normális eloszlás kumulatív eloszlásfüggvénye.
+A put-ár a put--call paritásból adódik:
+
+\begin{equation}
+    P = C - S + K\,e^{-rT}. \label{eq:put}
+\end{equation}
+
+\subsection{Homogenitási tulajdonság és moneyness-alapú normalizáció}
+
+Garcia és Gençay \cite{garcia2000} felismerték, hogy a Black--Scholes call-ár
+elsőfokúan homogén $S$-ben és $K$-ban:
+
+\begin{equation}
+    C(\lambda S,\,\lambda K,\,T,\,r,\,\sigma) = \lambda\,C(S,\,K,\,T,\,r,\,\sigma).
+\end{equation}
+
+Ebből következik az ún.\ \textit{homogeneity hint}: a normalizált call-ár $C/K$
+csupán az $m = S/K$ moneyness, $T$, $r$ és $\sigma$ függvénye:
+
+\begin{equation}
+    \frac{C}{K} = f\!\left(\frac{S}{K},\;T,\;r,\;\sigma\right). \label{eq:hint}
+\end{equation}
+
+Így a neurális hálónak elegendő egyetlen bemeneti változóval ($m$) kezelnie az
+árszint-információt, miközben a kimenet automatikusan arányos a kötési árhoz.
+Ez csökkenti a bemeneti tér dimenzióját, javítja az általánosítást és megkönnyíti
+a tanítást \cite{garcia2000}.
+Jelen munkában valamennyi modell
+$[m_\text{norm},\,T_\text{norm},\,r_\text{norm},\,\sigma_\text{norm}]$
+négyelemű, $[0,1]$-re skálázott vektort kap bemenetként; kimenete a normalizált
+call-ár $\hat{C}/K$.
+
+\subsection{Neurális hálók az opciós árazásban -- irodalmi áttekintés}
+
+Hutchinson, Lo és Poggio \cite{hutchinson1994} elsőként mutatták meg, hogy
+nemparaméteres tanuló hálózatok (RBF, MLP) opciós árazást képesek tanulni, és az
+eredmény közel Black--Scholes minőségű.
+Garcia és Gençay \cite{garcia2000} a homogeneity hinttel kombinálta ezt a
+megközelítést; a moneyness-normalizáció azóta szinte minden neurális hálós
+árazási módszer alappillére \cite{ruf2020}.
+
+Culkin és Das \cite{culkin2017} demonstrálták, hogy egy 4 rejtett réteges,
+rétegenként 100 neuronos MLP mintegy 300\,000 szintetikus Black--Scholes mintán
+kiemelkedően alacsony RMSE-t ér el; ez a tanulmány napjainkig az egyik legtöbbet
+idézett baseline.
+Liu, Oosterlee és Bohte \cite{liu2019} bevezette a Calibration Neural Networkot
+(CaNN), amely pénzügyi korlátokat (görög érzékenységek) büntetőtagként épít be a
+veszteségfüggvénybe.
+Della Corte és mtsai \cite{dellacorte2023} empirikusan hasonlítottak össze MLP,
+ResNet és Highway Network architektúrákat; eredményeik szerint a generalizált
+Highway Network teljesít a legjobban mind Black--Scholes, mind Heston
+modelleken.
+Liao és mtsai \cite{liao2024} a no-arbitrage és monotonitási feltételeket
+soft constraintként ültetik be a veszteségfüggvénybe.
+
+Jelen munka a Culkin--Das baseline köré épül, és szisztematikusan összehasonlítja
+azt hat további, az irodalomból merített architektúrával egyetlen, egységes
+kísérleti keretben.
+
+
+%% ============================================================
+%%  KONKRÉT MUNKA ISMERTETÉSE
+%% ============================================================
+\section{Konkrét munka ismertetése}
+
+\subsection{Adathalmaz generálása}
+
+A tanítóadatot szintetikus, Black--Scholes-képlettel számított opciós árak
+alkotják.
+A paramétertér lefedéséhez latin hiperkocka mintavételezést (Latin Hypercube
+Sampling, LHS) \cite{mckay1979} alkalmaztunk, amely azonos mintaszám mellett
+egyenletesebb térfoglalást biztosít az egyszerű véletlen mintavételezésnél.
+A teljes, 1\,000\,000 mintából álló adathalmazt véletlenszerű keveréssel
+és rögzített maggal (\texttt{seed}\,=\,42) osztottuk fel tanító-,
+validációs és tesztkészletre (70\,/\,15\,/\,15\%).
+
+\begin{table}[H]
+\centering
+\caption{Az adathalmaz mintavételezett paraméterei és tartományai}
+\label{tab:params}
+\begin{tabular}{llcc}
+\toprule
+Paraméter & Szimbólum & Minimum & Maximum \\
+\midrule
+Mögöttes eszköz ára & $S$ & 10{,}0 & 150{,}0 \\
+Moneyness & $m = S/K$ & 0{,}5 & 1{,}5 \\
+Lejáratig hátralévő idő (év) & $T$ & 0{,}005 & 2{,}0 \\
+Kockázatmentes kamatláb & $r$ & 0{,}00 & 0{,}05 \\
+Éves volatilitás & $\sigma$ & 0{,}05 & 0{,}90 \\
+\midrule
+\multicolumn{4}{l}{\small Tanítókészlet: 700\,000 \quad Validáció: 150\,000 \quad Teszt: 150\,000}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A kötési árat a $K = S/m$ összefüggésből számítottuk vissza, garantálva, hogy
+minden minta realisztikus moneyness tartományban maradjon; az osztalékhozamot
+$q = 0$-nak tekintettük.
+A bemeneti jellemzőket $[0,1]$ intervallumra normalizáltuk (min-max skálázás);
+a kimeneti változó a normalizált call-ár $\hat{C}/K$.
+
+\subsection{Implementált architektúrák}
+
+Összesen hét modellkonfigurációt implementáltunk PyTorch keretrendszerben;
+az első három az irodalomból ismert architektúrákat replikálja, a maradék négy
+kísérleti jellegű változat (lásd a \ref{tab:architectures}.~táblázatot).
+
+\begin{table}[H]
+\centering
+\caption{Az implementált modellek összefoglalása}
+\label{tab:architectures}
+\small
+\begin{tabular}{p{3.5cm}p{3cm}p{4.8cm}rr}
+\toprule
+Modell & Típus & Kulcsjellemzők & Param. & Aktiv. \\
+\midrule
+MLPPricer      & Alap MLP         & 4 réteg $\times$ 100 neuron, nincs norm.     &  31\,001 & ReLU \\
+DeepMLPPricer  & Mélyebb MLP      & 4$\times$256, LayerNorm, Dropout(0{,}1)       & 267\,521 & ReLU \\
+ResNetPricer   & Reziduális MLP   & 3 ResBlock, BatchNorm                         & 398\,593 & ReLU \\
+GELUResNetPricer & Reziduális MLP & 3 GELUResBlock, LayerNorm                     & 398\,593 & GELU \\
+DenseMLPPricer & DenseNet-stílus  & 4 réteg, sűrű összefűzés, 128 dim             & 101\,894 & GELU \\
+HighwayPricer  & Highway-gating   & 4 blokk, tanult kapu                          & 528\,129 & GELU \\
+FINNPricer     & Kétágú FINN      & Közelítő ág + korrekciós ResNet               & 403\,202 & GELU \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{MLPPricer (Culkin \& Das, 2017).}
+Négy rejtett réteges, rétegenként 100 neuronos MLP ReLU aktivációval,
+normalizáció és dropout nélkül \cite{culkin2017} -- ez a referencia-modell.
+
+\paragraph{DeepMLPPricer (Della Corte et al., 2023).}
+Négy rejtett réteg rétegenként 256 neuronnal, pre-LN elrendezéssel
+(LayerNorm $\to$ ReLU $\to$ Dropout(0{,}1) $\to$ lineáris) \cite{dellacorte2023}.
+
+\paragraph{ResNetPricer (Della Corte et al., 2023).}
+Három reziduális blokkból álló háló BatchNorm normalizációval \cite{dellacorte2023}.
+A skip-kapcsolatok csökkentik a gradiens eltűnés kockázatát mélyebb hálóknál.
+
+\paragraph{GELUResNetPricer.}
+A ResNetPricer változata GELU aktivációval és LayerNorm normalizációval.
+Motiváció: a Black--Scholes-függvény sima; a GELU ($x \cdot \Phi(x)$)
+simább gradienst biztosít, mint a ReLU.
+
+\paragraph{DenseMLPPricer (Huang et al., 2017 -- DenseNet-stílus).}
+Minden réteg az összes korábbi réteg kimenetét összefűzve kapja bemenetként
+($h_k = \text{GELU}(W_k\cdot[x,\,h_1,\ldots,h_{k-1}])$) \cite{huang2017},
+ami jobb gradiens-áramlást és feature reuse-t tesz lehetővé.
+
+\paragraph{HighwayPricer (Srivastava et al., 2015).}
+Tanulható transform gate-tel ($T = \sigma(W_T x - 1)$) irányítja az
+információáramlást; a blokk kimenete $y = H\cdot T + x\cdot(1-T)$,
+ahol $H = \text{GELU}(W_H x)$ \cite{srivastava2015}.
+Ez az architektúra Della Corte et al. \cite{dellacorte2023} szerint
+BS és Heston modelleken egyaránt a legjobb.
+
+\paragraph{FINNPricer (Liu et al., 2019; Liao et al., 2024).}
+Kétágú architektúra: egy könnyű közelítő ág ($2\times64$, GELU) és egy nehéz
+korrekciós ág (GELUResNet, 256 dim, 3 blokk); a kimenet a két ág összege
+\cite{liu2019,liao2024}.
+
+\subsection{Tanítási konfiguráció}
+
+Valamennyi modellt azonos hiperparaméterekkel tanítottuk; az egységes feltételek
+biztosítják az összehasonlíthatóságot (lásd a \ref{tab:training}.~táblázatot).
+
+\begin{table}[H]
+\centering
+\caption{Tanítási konfiguráció}
+\label{tab:training}
+\begin{tabular}{ll}
+\toprule
+Hiperparaméter & Érték \\
+\midrule
+Optimizer & Adam \\
+Tanulási ráta (kezdeti) & $1 \times 10^{-3}$ \\
+L2 regularizáció (weight decay) & $1 \times 10^{-4}$ \\
+Veszteségfüggvény & MSE \\
+Batch méret & 4\,096 \\
+Max.\ epochszám & 200 \\
+LR ütemező & ReduceLROnPlateau (factor\,=\,0{,}5; patience\,=\,5) \\
+Early stopping türelme & 10 epoch \\
+Véletlenszám mag & 42 \\
+Eszköz & NVIDIA GeForce RTX 4060 Laptop GPU (8\,GB) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Az LR ütemező felezi a tanulási rátát, ha a validációs veszteség 5 epokon át
+nem javul (minimum: $10^{-6}$).
+Minden epochban, ha a validációs veszteség új minimumot ér el, a modell állapota
+checkpointba mentődik.
+
+\subsection{Kiértékelési eredmények}
+
+A kiértékelés a 150\,000 mintás teszthalmazon zajlott.
+Az összesített metrikákat a \ref{tab:results}.~táblázat, a moneyness-szegmensenkénti
+RMSE értékeket a \ref{tab:segmented}.~táblázat tartalmazza.
+A szegmenshatárok: OTM~$m < 0{,}9$, ATM~$0{,}9 \leq m \leq 1{,}1$,
+ITM~$m > 1{,}1$.
+
+\begin{table}[H]
+\centering
+\caption{Összesített kiértékelési eredmények (teszthalmaz, $N = 150\,000$)}
+\label{tab:results}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lrrrrrr}
+\toprule
+Modell & Param. & Best ep. & Val~MSE~($\times10^{-5}$) & RMSE & MAE & $R^2$ \\
+\midrule
+\textbf{MLPPricer}   &  31\,001 & 68 & \textbf{2{,}13}  & \textbf{0{,}004612} & \textbf{0{,}002780} & \textbf{0{,}999407} \\
+ResNetPricer          & 398\,593 & 80 & 2{,}28           & 0{,}004788          & 0{,}003274          & 0{,}999361 \\
+GELUResNetPricer      & 398\,593 & 40 & 8{,}28           & 0{,}009135          & 0{,}006027          & 0{,}997673 \\
+FINNPricer            & 403\,202 & 17 & 9{,}23           & 0{,}009653          & 0{,}006625          & 0{,}997401 \\
+DenseMLPPricer        & 101\,894 & 18 & 22{,}80          & 0{,}015172          & 0{,}010694          & 0{,}993581 \\
+HighwayPricer         & 528\,129 & 22 & 23{,}20          & 0{,}015281          & 0{,}011005          & 0{,}993488 \\
+DeepMLPPricer         & 267\,521 &  4 & 27{,}40          & 0{,}016575          & 0{,}013233          & 0{,}992338 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Szegmentált RMSE értékek az OTM/ATM/ITM tartományokban}
+\label{tab:segmented}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccc}
+\toprule
+Modell & OTM ($m<0{,}9$) & ATM ($0{,}9$--$1{,}1$) & ITM ($m>1{,}1$) & Max.~hiba \\
+\midrule
+\textbf{MLPPricer}  & \textbf{0{,}002933} & \textbf{0{,}005903} & 0{,}005214          & 0{,}076284 \\
+ResNetPricer         & 0{,}004429          & 0{,}005342          & \textbf{0{,}004842} & \textbf{0{,}065314} \\
+GELUResNetPricer     & 0{,}008078          & 0{,}011879          & 0{,}008536          & 0{,}105482 \\
+FINNPricer           & 0{,}008649          & 0{,}012113          & 0{,}009211          & 0{,}105467 \\
+DenseMLPPricer       & 0{,}011125          & 0{,}018354          & 0{,}016836          & 0{,}115152 \\
+HighwayPricer        & 0{,}011821          & 0{,}020864          & 0{,}015054          & 0{,}115609 \\
+DeepMLPPricer        & 0{,}013577          & 0{,}013992          & 0{,}020115          & 0{,}103493 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A legszembetűnőbb eredmény az MLPPricer fölénye: a legkisebb paraméterszámmal
+(31\,001) érte el a legjobb összesített RMSE-t (0{,}004612) és $R^2$-t (0{,}999407).
+A ResNetPricer (398\,593 paraméter) mindössze 3{,}8\%-kal gyengébb RMSE-vel zárt
+($R^2 = 0{,}9994$), de közel 13-szoros paramétertöbbleggel.
+Ez arra utal, hogy a Black--Scholes-függvény inherensen sima és kis hálóval is
+jól approximálható, feltéve, hogy elegendő ideig tanítják.
+Az MLPPricer 68 epochon át tanult, míg a bonyolultabb modellek jellemzően
+4--40 epochnál megálltak (early stopping).
+
+A szegmentált elemzés szerint az MLPPricer OTM és ATM tartományban a legjobb,
+míg a ResNetPricer ITM szegmensben vezet (RMSE\,=\,0{,}004842).
+
+\begin{figure}[H]
+    \centering
+    % A képet töltsd fel az images/ almappába Overleaf-en
+    \includegraphics[width=0.92\textwidth]{training_curve_comparison.png}
+    \caption{Az összes modell tanulási görbéje (validációs MSE epochonként)}
+    \label{fig:curves}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % A képet töltsd fel az images/ almappába Overleaf-en
+    \includegraphics[width=0.72\textwidth]{val_mse_bar_chart.png}
+    \caption{Modellek összehasonlítása legjobb validációs MSE alapján}
+    \label{fig:barchart}
+\end{figure}
+
+\clearpage
+
+%% ============================================================
+%%  ÖSSZEFOGLALÁS
+%% ============================================================
+\section{Összefoglalás}
+
+A kísérlet során hét neurális háló architektúrát hasonlítottunk össze
+szintetikus Black--Scholes adatokon alapuló európai call opció árazási feladaton.
+A legmeglepőbb eredmény az MLPPricer győzelme: a Culkin és Das \cite{culkin2017}
+nyomán implementált, mindössze 31\,001 paraméterű egyszerű MLP érte el a legjobb
+teszthalmaz-RMSE-t (0{,}004612) és $R^2$ értéket (0{,}999407).
+Ez megerősíti, hogy a Black--Scholes-árazási függvény inherensen sima, és kis,
+egyszerű hálókkal kellő pontossággal approximálható -- feltéve, hogy elegendő
+ideig, megfelelő LR-ütemezéssel tanítják őket.
+
+\paragraph{Korlátok.}
+A kísérlet kizárólag szintetikus Black--Scholes adatokon alapul, amelyek nem
+tükrözik a valódi piaci jelenségeket (volatility smile, bid-ask spread,
+likviditási hatások).
+Az egyenlőtlen tanítási hossz -- az MLPPricer 68 epochon, a DeepMLPPricer
+mindössze 4 epochon tanult -- elfogultságot vihet az összehasonlításba.
+A ResNet-variánsok BatchNorm/LayerNorm és ReLU/GELU különbsége nehezíti
+az egyes tényezők elkülönítését.
+
+\paragraph{Jövőbeli irányok.}
+A tervezett második fázisban historikus S\&P~500 opciós adatok bevonása,
+a volatility smile modellezése, valamint a görög érzékenységek
+($\Delta$, $\Gamma$, $\mathcal{V}$, $\Theta$, $\varrho$) közvetlen becslése
+automatikus differenciálással vagy multi-output architektúrával szerepel.

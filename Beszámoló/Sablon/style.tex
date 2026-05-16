@@ -1,0 +1,118 @@
+%% Ez a fájl felelős azért, hogy beállítsa, hogy hogyan nézzen ki a dokumentum, leírja az összes formázást. A fájl végén található rész pedig elindítja a pdf generálását a contents.tex importálásával.
+
+% Általános formázások
+% -------------------------------------------------------
+
+\documentclass[a4paper,11pt,oneside]{article}
+
+% nyelvi csomag
+% Ha angolul írod, akkor töröld ki a "magyar" szót
+\usepackage[english, magyar]{babel}
+
+% Tartalomjegyzék formázásához
+\usepackage{tocloft}
+
+% Fejezetcímek formázása
+\usepackage{titlesec}
+\setcounter{secnumdepth}{2} 
+
+% margók
+\usepackage[margin=2.5cm]{geometry}
+
+% másfeles sorköz
+\linespread{1.5}
+
+% Hasznos csomagok
+% -------------------------------------------------------
+
+% ékezetes betűk kezelése
+\usepackage[utf8]{inputenc}
+% ékezetes betűknél is legyen automatikus elválasztás
+\usepackage[T1]{fontenc}
+
+% képletekhez kell
+\usepackage{mathtools}                        
+% bibliográfia (IEEE formátumban)
+\usepackage[style=ieee, backend=biber]{biblatex}
+\BiblatexHungarianWarningOff
+% kattintható tartalomjegyzék és hivatkozások
+\usepackage[hidelinks, unicode, pdfusetitle]{hyperref}
+% PDF könyvjelzők
+\usepackage{bookmark}
+% Színes cellák táblázatokban
+\usepackage[table,xcdraw]{xcolor}
+% Hyperlinks - URL-ek a szövegben
+\usepackage{url}
+% Hosszabb idézetek
+\usepackage{csquotes}
+% ábrák
+\usepackage{graphicx}
+% a bibliográfiában megfelelően legyenek formázva az idézőjelek
+\DeclareQuoteAlias{german}{magyar}
+
+% Kódrészletek
+\usepackage{listings}
+\usepackage{sourcecodepro} % egy jó betűtípus
+\lstset{captionpos=b, numberbychapter=false, basicstyle=\ttfamily, showstringspaces=false, columns=fullflexible}
+
+% Táblázat- és ábraformázáshoz
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{amssymb}
+
+% Kódrészletek magyar stílusú számozása
+\renewcommand\lstlistingname{kódrészlet}
+\makeatletter
+\renewcommand\fnum@lstlisting{\ifx\lst@@caption\@empty\else\thelstlisting.~\fi\lstlistingname}%
+\makeatother
+
+% Képek beszúrásakor automatikusan ebben a mappában fogja a képeket keresni
+\graphicspath{ {images/} }
+
+% Hivatkozásokat tartalmazó fájl
+\addbibresource{hivatkozasok.bib}
+
+% -------------------------------------------------------
+
+
+% Címoldal + üres lap utána
+% -------------------------------------------------------
+\author{\nev\\\kepzes}
+\title{\Huge{\tipus}\\[1cm]
+    \huge{\cim}}
+\date{\the\year}
+
+\newcommand{\cimlap}{
+    \begin{center}
+    \includegraphics[height=7cm]{itk_logo_hu}
+    \end{center}
+    
+    \vspace*{\fill}
+    
+    {\let\newpage\relax\maketitle}
+    \vspace*{\fill}
+    \begin{center}
+    \bigskip
+    
+    \temavezetok
+    \end{center}
+    
+    \thispagestyle{empty}
+}
+
+\newcommand{\ureslap}{
+    \begingroup
+        \pagestyle{empty}
+        \cleardoublepage
+    \endgroup
+    \clearpage
+}
+% -------------------------------------------------------
+
+
+% ------------- Dokumentum legenerálása -----------------
+\begin{document}
+
+\input{beallitasok.tex}
+
+\end{document}

@@ -231,8 +231,8 @@ ITM~$m > 1{,}1$.
 \centering
 \caption{Összesített kiértékelési eredmények a normalizált $C/K$ célváltozón mérve (teszthalmaz, $N = 150\,000$)}
 \label{tab:results}
-\small
 \renewcommand{\arraystretch}{1.15}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 Modell & Paraméterek & Legjobb epoch & Validációs~MSE~($\times10^{-5}$) & RMSE & MAE & $\text{R}^2$ \\
@@ -245,7 +245,8 @@ GELUResNetPricer      & 398\,337 &  31 & 8{,}50           & 0{,}009293          
 HighwayPricer         & 527\,873 &   9 & 21{,}95          & 0{,}014884          & 0{,}010581          & 0{,}994234 \\
 DenseMLPPricer        & 101\,381 &   5 & 32{,}28          & 0{,}018042          & 0{,}013094          & 0{,}991528 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \begin{table}[H]

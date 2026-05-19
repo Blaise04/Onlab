@@ -304,3 +304,19 @@ A projekt során hét neurális háló architektúrát hasonlítottunk össze sz
 
 \paragraph{Korlátok}
 A kísérlet kizárólag szintetikus Black-Scholes-adatokon alapul, ezért az eredmények nem tükrözik közvetlenül a valódi piaci jelenségeket, például a volatility smile-t, valamint a tényleges piacokon megjelenő egyéb hatásokat. A teszthalmaz ugyanabból a paramétertartományból származik, mint a tanulóhalmaz, ezért az eredmények elsősorban a vizsgált tartományon belüli pontosságot mutatnak. További korlát, hogy az egységes tanítási konfiguráció nem feltétlenül optimális minden architektúrára, az MLPPricer összesen 134 epochon tanult, legjobb checkpointja a 123. epoch volt, míg például a DeepMLPPricer 37 epoch után állt meg, legjobb checkpointja pedig a 27. epoch volt. Ez az egyenlőtlen tanítási hossz elfogultságot vihet az összehasonlításba. Emellett a ResNet-variánsok BatchNorm/LayerNorm és ReLU/GELU különbségei nehezítik annak elkülönítését, hogy a teljesítménykülönbség pontosan mely architekturális tényezőből származik.
+
+%% ============================================================
+%%  AI-ESZKÖZÖK HASZNÁLATA
+%% ============================================================
+\section*{AI-eszközök használata}
+
+A dolgozat elkészítése során mesterséges intelligencia alapú eszközöket használtam a következőkre:
+
+\begin{itemize}
+    \item \textbf{Adatgenerátor:} a szintetikus Black–Scholes adathalmaz generáló szkriptjének kódolásához, az általam meghatározott specifikáció alapján.
+    \item \textbf{Modellarchitektúrák implementálása:} az általam kiválasztott és részben saját tervezésű, részben az irodalomból merített architektúrák kódbeli megvalósításához. Az architektúrák forrásait és inspirációjukat a dolgozat főszövege hivatkozásokkal jelöli, a közvetlen implementáció PyTorchban AI-segítséggel készült.
+    \item \textbf{Vizualizációk:} a kiértékelési ábrák és plotok elkészítéséhez.
+    \item \textbf{Fogalmazás:} a beszámoló egyes részeinek nyelvi csiszolásához. A tartalom, az eredmények értelmezése és a következtetések saját munkám.
+\end{itemize}
+
+Az AI-eszközök minden esetben az általam meghatározott irányelvek és specifikációk alapján működtek. A kutatási döntések, a módszertan kiválasztása és az eredmények értékelése saját munkám eredménye.

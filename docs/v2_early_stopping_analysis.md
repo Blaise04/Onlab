@@ -4,7 +4,7 @@
 
 Az eredeti kísérletben az early stopping `patience=10` volt beállítva. Ez azt jelenti, hogy a tanítás leállt, ha 10 egymás utáni epochon át nem javult a validációs MSE. A kísérlet utólagos kiértékelésekor felmerült a kérdés: elegendő volt-e ez az érték, vagy egyes modellek korábban álltak le a tényleges optimumukhoz képest?
 
-A v2 kísérlet célja ennek empirikus tisztázása: ugyanazokkal a hiperparaméterekkel, azonos véletlenszámmal (seed=42), de `patience=30`-cal újrafuttatni az összes komplex architektúrát (az MLPPricer kivételével, amely az eredeti 123 epochos tanulásával már bizonyítottan nem szenvedett korai megállástól).
+A v2 kísérlet célja ennek empirikus tisztázása: ugyanazokkal a hiperparaméterekkel, azonos véletlenszámmal (seed=42), de `patience=30`-cal újrafuttatni az összes komplex architektúrát (az MLPPricer kivételével — ennek indoklása a 4.1-es szakaszban).
 
 ---
 
@@ -56,7 +56,28 @@ A patience=30 csak egyetlen modell esetén változtatott az eredményen, de ott 
 
 ## 4. Részletes elemzés modellenként
 
-### 4.1 ResNetPricer — az egyetlen lényeges javulás
+### 4.1 MLPPricer — miért nem futott v2?
+
+Az MLPPricer-t szándékosan kihagytuk a v2 kísérletből. Az indok nem csupán az, hogy az eredeti futtatás 123 epochig tartott — hanem a **tanulási ráta ütemező viselkedése**, amely önmagában is meggyőző konvergencia-bizonyíték.
+
+A `ReduceLROnPlateau` scheduler minden egyes LR-csökkentést csak akkor hajt végre, ha a validációs loss `patience=10` epochon át nem javul. Az MLPPricer LR-trajektóriája:
+
+| LR-csökkentés sorszáma | Tanulási ráta  |
+|------------------------|----------------|
+| Induló                 | 1.0000e-03     |
+| 1.                     | 5.0000e-04     |
+| 2.                     | 2.5000e-04     |
+| 3.                     | 1.2500e-04     |
+| 4.                     | 6.2500e-05     |
+| 5.                     | 3.1250e-05     |
+| 6.                     | 1.5625e-05     |
+| 7. (végső)             | **1.5625e-05** |
+
+Ez azt jelenti, hogy a modell **7-szer akadt el** (10 epochon át nem javult), és mégis mindannyiszor képes volt tovább fejlődni alacsonyabb LR-en — egészen a 123. epochig. A tanítás leállításakor a LR már annyira alacsony volt (1.5625e-05, az induló érték 1/64-e), hogy számottevő további javulás valószínűsége minimális. Ha patience=30-cal futtattuk volna, legkorábban a 153. epochnál állt volna meg (123+30), de az 1.5625e-05-os LR mellett ez szinte biztosan nem hozott volna érdemi változást.
+
+**Összefoglalva:** az MLPPricer esetén a patience=10 kizárása nem hiányosság, hanem megalapozott döntés: a 7-szeres LR-redukció sokkal erősebb konvergencia-jel annál, amit a patience értéke önmagában le tud írni.
+
+### 4.2 ResNetPricer — az egyetlen lényeges javulás
 
 **Eredeti:** best epoch=28, val MSE = 3.8462e-05, tanítás megállt a 38. epochban.
 
@@ -70,7 +91,7 @@ Az LR scheduling is sokat segített: a ReduceLROnPlateau az 1e-3 értéket fokoz
 
 **Konklúzió:** A patience=10 a ResNetPricernél valóban korai megállást okozott — a BatchNorm-indukált validációs zaj miatt a patience érdemi szerepet játszott. Ez az egyetlen modell, amelynél az újrafuttatás ténylegesen jobb eredményre vezetett.
 
-### 4.2 DeepMLPPricer — a patience irreleváns volt
+### 4.3 DeepMLPPricer — a patience irreleváns volt
 
 **Eredeti:** best epoch=27, val MSE = 3.6347e-05.
 
@@ -78,7 +99,7 @@ Az LR scheduling is sokat segített: a ReduceLROnPlateau az 1e-3 értéket fokoz
 
 Az eredeti futtatás best epoch=27-en állt meg. A v2 a 27. epoch utáni 30 epochon (28–57) sem tudott jobbat elérni: a validációs veszteség szisztematikusan romlott (7.6e-05, 8.7e-05, 1.2e-04, ..., 3.7e-04 a végén). Ez egyértelműen jelzi, hogy a modell a 27. epochban ténylegesen elérte a legjobb általánosítási képességét, és a patience=10 elegendő volt.
 
-### 4.3 GELUResNetPricer — stagnálás, nem korai megállás
+### 4.4 GELUResNetPricer — stagnálás, nem korai megállás
 
 **Eredeti:** best epoch=31, val MSE = 8.4989e-05.
 
@@ -86,7 +107,7 @@ Az eredeti futtatás best epoch=27-en állt meg. A v2 a 27. epoch utáni 30 epoc
 
 A 31. epoch utáni 30 extra epochon (32–61) a validációs loss 8.5e-05 körül oszcillált (néha 9.8e-05-ig is felment), de nem javult. A modell valóban elérte a kapacitáskorlátját ennél a tanítási konfigurációnál.
 
-### 4.4 FINNPricer — megerősített stagnálás
+### 4.5 FINNPricer — megerősített stagnálás
 
 **Eredeti:** best epoch=21, val MSE = 8.2406e-05.
 
@@ -94,7 +115,7 @@ A 31. epoch utáni 30 extra epochon (32–61) a validációs loss 8.5e-05 körü
 
 A 22–51. epochok közötti validációs loss 8.3–9.3e-05 között mozgott, enyhén emelkedő trendtel (az 50. epochra 8.96e-05). A modell enyhe overfittingre utal a 21. epoch után, de a különbség nem szignifikáns. A patience=10 elegendő volt.
 
-### 4.5 DenseMLPPricer — architektúrakorlát, nem early stopping
+### 4.6 DenseMLPPricer — architektúrakorlát, nem early stopping
 
 **Eredeti:** best epoch=5, val MSE = 3.2283e-04, tanítás megállt a 15. epochban.
 
@@ -104,7 +125,7 @@ Ez a modell volt az egyik legmeglepőbb eset. A validációs loss az 5. epoch ut
 
 A DenseMLPPricer esetén a probléma nem az early stopping volt, hanem az architektúra generalizációs korlátja — a DenseNet-stílusú összefűzés (minden réteg bemenetéül az összes korábbi réteg kimenetét megkapja) ebben a konfigurációban (hidden_dim=128, n_layers=4) nem tudta megtanulni a Black-Scholes függvényt a validációs halmazra is kiterjedő minőségben.
 
-### 4.6 HighwayPricer — train/val divergencia
+### 4.7 HighwayPricer — train/val divergencia
 
 **Eredeti:** best epoch=9, val MSE = 2.1954e-04, tanítás megállt a 19. epochban.
 

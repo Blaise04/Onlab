@@ -67,11 +67,9 @@ for model in V2_MODELS:
 
     color = COLORS[model]
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
-    fig.suptitle(f'{model} — eredeti (patience=10) vs. v2 (patience=30)', fontsize=13)
-
     for ax, df, label, ls in [
-        (axes[0], df_orig, 'Eredeti (patience=10)', '--'),
-        (axes[1], df_v2,   'v2 (patience=30)',      '-'),
+        (axes[0], df_orig, 'Eredeti (patience=10)',          '-'),
+        (axes[1], df_v2,   'Második futtatás (patience=30)', '-'),
     ]:
         ax.plot(df['epoch'], df['train_loss'], color='steelblue',
                 linewidth=1.8, linestyle=ls, label='Train MSE')
@@ -148,7 +146,7 @@ bars1 = ax.bar(x - width/2, orig_vals, width, label='Eredeti (patience=10)',
                color='steelblue', edgecolor='black', linewidth=0.6, alpha=0.85)
 bars2_vals = [v if v is not None else 0 for v in v2_vals]
 bars2_vis  = [v is not None for v in v2_vals]
-bars2 = ax.bar(x + width/2, bars2_vals, width, label='v2 (patience=30)',
+bars2 = ax.bar(x + width/2, bars2_vals, width, label='Második futtatás (patience=30)',
                color='tomato', edgecolor='black', linewidth=0.6, alpha=0.85)
 for bar, vis in zip(bars2, bars2_vis):
     if not vis:
@@ -157,7 +155,6 @@ for bar, vis in zip(bars2, bars2_vis):
 ax.set_yscale('log')
 ax.set_xlabel('Modell', fontsize=12)
 ax.set_ylabel('Legjobb Val MSE (log-skála)', fontsize=12)
-ax.set_title('Legjobb validációs MSE — eredeti vs. v2 futtatás', fontsize=13)
 ax.set_xticks(x)
 ax.set_xticklabels(labels, rotation=15, ha='right')
 ax.legend(fontsize=10)

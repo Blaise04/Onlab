@@ -309,9 +309,11 @@ A \ref{sec:eval}.~alszakaszban azonosított early stopping torzítás tapasztala
 \label{tab:v2compare}
 \small
 \renewcommand{\arraystretch}{1.15}
-\begin{tabular}{lrcrrcc}
+\begin{tabular}{lcccccc}
 \toprule
-Modell & Első futtatás legjobb epoch & Első futtatás validációs MSE & Második futtatás max epoch & Második futtatás legjobb epoch & Második futtatás validációs MSE & Javulás \\
+ & \multicolumn{2}{c}{Első futtatás} & \multicolumn{3}{c}{Második futtatás} & \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-6}
+Modell & Legjobb ep. & Val.\ MSE & Max ep. & Legjobb ep. & Val.\ MSE & Javulás \\
 \midrule
 \textbf{ResNetPricer} & 28 & 3{,}85 & \textbf{200} & \textbf{182} & \textbf{0{,}835} & \textbf{$\approx$78\,\%} \\
 DeepMLPPricer    & 27 & 3{,}63 &  57 & 27 & 3{,}63 & --- \\
@@ -362,8 +364,6 @@ Rang & Modell & Legjobb val MSE & Forrás \\
     \caption{Legjobb validációs MSE összehasonlítás: a ResNetPricer drasztikus javulása szemben a többi modell változatlanságával}
     \label{fig:compare_bar}
 \end{figure}
-
-\clearpage
 
 %% ============================================================
 %%  ÖSSZEFOGLALÁS

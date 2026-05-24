@@ -220,6 +220,7 @@ Minden epochban, ha a validációs veszteség új minimumot ér el, a modell ál
 checkpointba mentődik.
 
 \subsection{Kiértékelési eredmények}
+\label{sec:eval}
 
 A kiértékelést a 150\,000 mintás teszthalmazon végeztük.
 Az összesített teljesítménymutatókat a \ref{tab:results}.~táblázat, míg a moneyness-szegmensenkénti
@@ -295,7 +296,72 @@ míg a ResNetPricer ITM szegmensben és maximális hiba tekintetében a legjobb.
     \label{fig:barchart}
 \end{figure}
 
-Az \ref{fig:curves}.~ábra szemléletesen mutatja a tanítási dinamika különbségét: az MLPPricer görbéje sima és hosszan tartó csökkenést mutat, míg a komplexebb modellek görbéi erősen ingadozók és idő előtt megszakadnak. A \ref{fig:barchart}.~ábra az alkalmazott tanítási konfiguráció melletti végeredményt összegzi, de önmagában nem alkalmas arra, hogy az architektúrák inherens képességéről következtetést vonjunk le, mivel az egyenlőtlen tanítási hossz, amelyet az early stopping konfigurációs elfogultsága okoz — torzítja az összehasonlítást.
+Az \ref{fig:curves}.~ábra szemléletesen mutatja a tanítási dinamika különbségét: az MLPPricer görbéje sima és hosszan tartó csökkenést mutat, míg a komplexebb modellek görbéi erősen ingadozók és idő előtt megszakadnak. A \ref{fig:barchart}.~ábra az alkalmazott tanítási konfiguráció melletti végeredményt összegzi, de önmagában nem alkalmas arra, hogy az architektúrák inherens képességéről következtetést vonjunk le, mivel az egyenlőtlen tanítási hossz, amelyet az early stopping konfigurációs elfogultsága okoz, torzítja az összehasonlítást.
+
+\subsection{Early stopping érzékenységvizsgálat}
+\label{sec:v2}
+
+A \ref{sec:eval}.~alszakaszban azonosított early stopping torzítás tapasztalati vizsgálatához a hat komplex architektúrát, az MLPPricer kivételével, háromszoros türelmi határral (30 epoch) tanítottam újra, azonos hiperparaméterekkel és azonos véletlenszámmaggal. Az MLPPricer kizárásának indoka az, hogy az eredeti futtatásban a \textit{ReduceLROnPlateau} ütemező az induló $10^{-3}$ tanulási rátát $1{,}5625 \times 10^{-5}$-re csökkentette 6 lépésben, ami egyértelmű konvergencia-jel, ekkora LR-értéknél a türelmi határ növelése érdemi javulást nem hozhat.
+
+\begin{table}[H]
+\centering
+\caption{Early stopping érzékenységvizsgálat: eredeti (10 epochos türelmi határ) vs.\ kibővített (30 epochos türelmi határ). Validációs MSE értékek $\times 10^{-5}$ egységben.}
+\label{tab:v2compare}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lrcrrcc}
+\toprule
+Modell & v1 best ep. & v1 val MSE & v2 max ep. & v2 best ep. & v2 val MSE & Javulás \\
+\midrule
+\textbf{ResNetPricer} & 28 & 3{,}85 & \textbf{200} & \textbf{182} & \textbf{0{,}835} & \textbf{$\approx$78\,\%} \\
+DeepMLPPricer    & 27 & 3{,}63 &  57 & 27 & 3{,}63 & --- \\
+GELUResNetPricer & 31 & 8{,}50 &  61 & 31 & 8{,}50 & --- \\
+FINNPricer       & 21 & 8{,}24 &  51 & 21 & 8{,}24 & --- \\
+HighwayPricer    &  9 & 22{,}0 &  39 &  9 & 22{,}0 & --- \\
+DenseMLPPricer   &  5 & 32{,}3 &  35 &  5 & 32{,}3 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A hat modellből öt esetén a legjobb epoch és a validációs MSE változatlan maradt, ezekre a tíz epochos türelmi határ elegendő volt. Az \textbf{egyetlen kivétel a ResNetPricer}, legjobb epochja 28-ról 182-re nőtt, validációs MSE-je $3{,}85 \times 10^{-5}$-ről \textbf{$8{,}35 \times 10^{-6}$-ra} csökkent, közel 4{,}6-szoros pontosságnövekedés.
+
+A jelenség magyarázata a BatchNorm és a validációs zaj kapcsolatában rejlik. A BatchNorm batch-statisztikák és futóátlag divergenciája miatt zajosabb validációs görbét produkál, mint a LayerNorm. Az oszcilláció a 28.\ epoch körüli platóban elfedte a tényleges, még folytatódó konvergenciát. Összehasonlításképpen a GELUResNetPricer (LayerNorm) a második futtatásban szintén a 31.\ epochban érte el legjobb eredményét, tehát LayerNorm esetén a rövidebb türelmi határ is elegendő volt. Ez általánosabb javaslatot is megfogalmaz, BatchNorm-alapú architektúráknál célszerű nagyobb türelmi értéket alkalmazni.
+
+A DenseMLPPricer és a HighwayPricer esetén a második futtatás megerősítette, hogy nem korai megállásról, hanem architektúrakorlátról van szó. A DenseMLPPricer tanulási görbéjén mindkét loss az 5.\ epoch után platóra ér és nem javul tovább. A modell elérte kapacitáskorlátját, a türelmi határ növelése nem segített. A validációs loss végig alacsonyabb értéken stagnál, mint a tanítási loss, ez a Dropout tanítás közbeni aktivitásából fakad, a modell korlátozott kifejezőerejére utal. A HighwayPricer esetén a tanítási loss a 9.\ epoch után is lassan tovább csökkent, miközben a validációs loss lapos maradt, oszcillált, de nem követte a tanítási javulást, a modell fejlődése nem rakódott át a validációs halmazra.
+
+\begin{table}[H]
+\centering
+\caption{Frissített modellrangsor a második futtatási kísérlet eredményeivel}
+\label{tab:finalranking}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{clcc}
+\toprule
+Rang & Modell & Legjobb val MSE & Forrás \\
+\midrule
+1. & \textbf{ResNetPricer}  & $8{,}35 \times 10^{-6}$ & kibővített türelem (182.\ ep.) \\
+2. & MLPPricer              & $2{,}06 \times 10^{-5}$ & eredeti (123.\ ep.) \\
+3. & DeepMLPPricer          & $3{,}63 \times 10^{-5}$ & eredeti megyezik a második futtatással \\
+4. & FINNPricer             & $8{,}24 \times 10^{-5}$ & eredeti megyezik a második futtatással \\
+5. & GELUResNetPricer       & $8{,}50 \times 10^{-5}$ & eredeti megyezik a második futtatással \\
+6. & HighwayPricer          & $2{,}20 \times 10^{-4}$ & eredeti megyezik a második futtatással \\
+7. & DenseMLPPricer         & $3{,}23 \times 10^{-4}$ & eredeti megyezik a második futtatással \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{compare_ResNetPricer.png}
+    \caption{ResNetPricer tanítási görbéje: eredeti vs.\ kibővített türelmi határral. Az utóbbiban a legjobb epoch 28-ról 182-re tolódott.}
+    \label{fig:resnet_compare}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\textwidth]{compare_best_val_mse_bar.png}
+    \caption{Legjobb validációs MSE összehasonlítás: a ResNetPricer drasztikus javulása szemben a többi modell változatlanságával}
+    \label{fig:compare_bar}
+\end{figure}
 
 \clearpage
 
@@ -304,10 +370,12 @@ Az \ref{fig:curves}.~ábra szemléletesen mutatja a tanítási dinamika különb
 %% ============================================================
 \section{Összefoglalás}
 
-A projekt során hét neurális háló architektúrát hasonlítottunk össze szintetikus Black-Scholes adatokon alapuló európai call opció árazási feladaton. Az alkalmazott egységes tanítási konfiguráció keretein belül a legjobb összesített eredményt az MLPPricer érte el: ez a 30\,901 paraméterű, Culkin \& Das \cite{culkin2017} alapján implementált egyszerű MLP produkálta a legalacsonyabb teszt-RMSE-t és a legmagasabb $\text{R}^2$ értéket. Ez igazolja, hogy a normalizált Black-Scholes árfüggvény $C/K$ alakja viszonylag egyszerű neurális hálóval is nagy pontossággal közelíthető. Ugyanakkor az eredmény \emph{nem} értelmezhető általános bizonyítékként arra, hogy az MLP inherensen felülmúlja a komplexebb architektúrákat: a komplexebb modellek validációs görbéje erősen ingadozó volt, a mindössze 10 epochnyi türelemre beállított early stopping idő előtt leállította a tanítást, mielőtt ezek a modellek teljesen konvergálhattak volna. A valódi architektúrális összehasonlításhoz modell-specifikus hiperparaméter-hangolás, szükséges lenne.
+A projekt során hét neurális háló architektúrát hasonlítottunk össze szintetikus Black-Scholes adatokon alapuló európai call opció árazási feladaton. Az egységes, tíz epochos türelmi határral alkalmazott tanítási konfiguráció keretein belül az MLPPricer produkálta a legalacsonyabb teszt-RMSE-t és a legmagasabb $\text{R}^2$ értéket, igazolva, hogy a normalizált Black-Scholes árfüggvény $C/K$ alakja viszonylag egyszerű neurális hálóval is nagy pontossággal közelíthető. Ugyanakkor ez az eredmény nem értelmezhető általános bizonyítékként arra, hogy az MLP inherensen felülmúlja a komplexebb architektúrákat. A komplexebb modellek validációs görbéje erősen ingadozó volt, a rövid türelmi határú early stopping idő előtt leállította a tanítást.
+
+Az elvégzett early stopping érzékenységvizsgálat tapasztalatilag tisztázta ezt a kérdést, öt komplex modell esetén a tíz epochos türelmi határ elegendőnek bizonyult, a \textbf{ResNetPricernél} azonban a BatchNorm által generált validációs zaj miatt valóban korai megállás lépett fel. A háromszoros türelmi határral elvégzett újrafuttatásban a ResNetPricer legjobb epochja 28-ról 182-re tolódott, validációs MSE-je $3{,}85 \times 10^{-5}$-ről $8{,}35 \times 10^{-6}$-ra csökkent, közel 4{,}6-szoros pontosságnövekedést eredményezve. A frissített rangsorban a \textbf{ResNetPricer} lett a legjobb architektúra, az MLPPricer-t $\approx$2{,}5-szörös különbséggel múlja felül. A valódi architektúrális összehasonlításhoz modell specifikus hiperparaméter hangolás szükséges lenne.
 
 \paragraph{Korlátok}
-A kísérlet kizárólag szintetikus Black-Scholes-adatokon alapul, ezért az eredmények nem tükrözik közvetlenül a valódi piaci jelenségeket, például a volatility smile-t, valamint a tényleges piacokon megjelenő egyéb hatásokat. A teszthalmaz ugyanabból a paramétertartományból származik, mint a tanulóhalmaz, ezért az eredmények elsősorban a vizsgált tartományon belüli pontosságot mutatnak. A legjelentősebb korlát az early stopping konfigurációs torzítása. Az egységes, 10 epochos türelmi határral alkalmazott early stopping az MLPPricer sima validációs görbéjéhez jól illeszkedett, a komplexebb modellek ingadozóbb görbéjéhez azonban nem: a ResNetPricer, DeepMLPPricer, GELUResNetPricer, FINNPricer és HighwayPricer esetén a validációs veszteség nagy amplitúdójú, átmeneti tüskéket produkált, amelyek a türelmi számlálót kimerítették, miközben az általános trend még csökkent. Ennek következtében az MLPPricer 123 epochig javult, a komplexebb modellek legjobb checkpointja viszont már az 5-31.~epoch között rögzült, az esetleges konvergencia előtt. Ez az egyenlőtlen tanítási hossz azt jelenti, hogy az eredményekből nem vonható le az a következtetés, hogy a komplexebb architektúrák általánosan rosszabbak, pusztán az állapítható meg, hogy az alkalmazott egységes early stopping konfiguráció mellett teljesítettek rosszabbul. A komplexebb modellek tényleges képességének feltárásához modell-specifikus, legalább 20 epochos türelmi határral végzett újratanítás szükséges. Emellett a ResNet-variánsok BatchNorm/LayerNorm és ReLU/GELU különbségei nehezítik annak elkülönítését, hogy a teljesítménykülönbség pontosan mely architekturális tényezőből származik.
+A kísérlet kizárólag szintetikus Black-Scholes adatokon alapul, ezért az eredmények nem tükrözik közvetlenül a valódi piaci jelenségeket, például a volatility smile-t, valamint a tényleges piacokon megjelenő egyéb hatásokat. A teszthalmaz ugyanabból a paramétertartományból származik, mint a tanulóhalmaz, ezért az eredmények elsősorban a vizsgált tartományon belüli pontosságot mutatnak. Az early stopping konfigurációs torzítása részleges korlátot jelent. A rövid türelmi határ az MLPPricer sima validációs görbéjéhez jól illeszkedett, a \textbf{ResNetPricer} BatchNorm-alapú, zajosabb görbéjéhez azonban nem, itt a validációs tüskék kimerítették a türelmi számlálót, miközben az általános trend még csökkent, ezt az érzékenységvizsgálat eredményei alátámasztották. A többi komplex modell esetén viszont a rövid türelmi határ elegendőnek bizonyult. Legjobb checkpointjuk a tényleges konvergencia közelében rögzült, így az összehasonlítás ezeknél a modelleknél ebből a szempontból megbízható. Az elvégzett early stopping érzékenységvizsgálat kimutatta, hogy a ResNetPricernél a rövid türelmi határ valóban korai megállást okozott, a többi öt komplex modell esetén azonban elegendőnek bizonyult, esetükben architektúrakorlát vagy tényleges konvergencia magyarázza a teljesítményt. Emellett a ResNet-variánsok BatchNorm, LayerNorm és ReLU, GELU különbségei nehezítik annak elkülönítését, hogy a teljesítménykülönbség pontosan melyik architekturális tényezőből származik.
 
 %% ============================================================
 %%  AI-ESZKÖZÖK HASZNÁLATA

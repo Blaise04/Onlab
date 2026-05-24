@@ -76,7 +76,6 @@ for i, (name, df) in enumerate(results.items()):
             color=COLORS[i % len(COLORS)], linewidth=2)
 ax.set_xlabel('Epoch', fontsize=12)
 ax.set_ylabel('Val MSE', fontsize=12)
-ax.set_title('Modellek validacios vesztesegenek osszehasonlitasa', fontsize=14)
 ax.legend()
 ax.grid(True, alpha=0.3)
 ax.set_yscale('log')
@@ -97,7 +96,6 @@ if results:
     ax.set_yscale('log')
     ax.set_xlabel('Modell', fontsize=12)
     ax.set_ylabel('Legjobb Val MSE (log-skala)', fontsize=12)
-    ax.set_title('Modellek legjobb validacios MSE-je (csokkeno sorrend)', fontsize=14)
     ax.grid(True, axis='y', alpha=0.3)
     plt.xticks(rotation=20, ha='right')
 
